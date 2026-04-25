@@ -1,121 +1,105 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React from 'react';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const holdings = [
+    { name: 'Total World Stock ETF', ticker: 'VT', allocation: '65.0%', value: '$142,350.21' },
+    { name: 'Intermediate-Term Treasury ETF', ticker: 'VGIT', allocation: '25.0%', value: '$54,750.00' },
+    { name: 'Total International Bond ETF', ticker: 'BNDX', allocation: '10.0%', value: '$21,900.00' },
+  ];
+
+  const activity = [
+    { date: 'Apr 20, 2026', type: 'Dividend Reinvestment', asset: 'VT', amount: '+$342.12' },
+    { date: 'Apr 15, 2026', type: 'Monthly Contribution', asset: 'Portfolio', amount: '+$5,000.00' },
+    { date: 'Mar 31, 2026', type: 'Rebalance', asset: 'VGIT/VT', amount: 'N/A' },
+  ];
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="dashboard">
+      <header className="header">
+        <div className="container">
+          <h1 className="logo">Global Wealth</h1>
+          <nav className="nav">
+            <span className="user-status">Investor: H. Wang</span>
+          </nav>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="container main-content">
+        <section className="summary-section">
+          <div className="card summary-card">
+            <h3>Net Worth</h3>
+            <p className="value">$219,000.21</p>
+            <span className="trend positive">+1.2% this month</span>
+          </div>
+          <div className="card summary-card">
+            <h3>Equity Allocation</h3>
+            <p className="value">65.0%</p>
+            <span className="trend neutral">Target: 65%</span>
+          </div>
+          <div className="card summary-card">
+            <h3>Time Horizon</h3>
+            <p className="value">18 Years</p>
+            <span className="trend neutral">To Goal: Retirement</span>
+          </div>
+        </section>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <section className="detail-section">
+          <div className="card holdings-card">
+            <h2>Core Holdings</h2>
+            <div className="table-wrapper">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Asset Name</th>
+                    <th>Ticker</th>
+                    <th>Allocation</th>
+                    <th className="text-right">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {holdings.map((h, i) => (
+                    <tr key={i}>
+                      <td>{h.name}</td>
+                      <td><code className="ticker">{h.ticker}</code></td>
+                      <td>{h.allocation}</td>
+                      <td className="text-right">{h.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          <div className="card activity-card">
+            <h2>Recent Activity</h2>
+            <ul className="activity-list">
+              {activity.map((a, i) => (
+                <li key={i} className="activity-item">
+                  <div className="activity-info">
+                    <span className="activity-type">{a.type}</span>
+                    <span className="activity-date">{a.date}</span>
+                  </div>
+                  <div className="activity-amount">
+                    <span className="asset-tag">{a.asset}</span>
+                    <span className={a.amount.startsWith('+') ? 'amount positive' : 'amount'}>
+                      {a.amount}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </main>
+
+      <footer className="footer">
+        <div className="container">
+          <p>&copy; 2026 Global Wealth Management. Humble growth for the long term.</p>
+        </div>
+      </footer>
+    </div>
+  );
 }
 
-export default App
+export default App;
