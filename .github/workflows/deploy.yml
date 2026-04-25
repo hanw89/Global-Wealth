@@ -1,4 +1,4 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Triggering a fresh deployment push
 name: Deploy static content to Pages
 
 on:
