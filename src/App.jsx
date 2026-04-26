@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AssetTracker from './components/AssetTracker';
+import DailySpending from './components/DailySpending';
 
 const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -113,6 +114,8 @@ const App = () => {
         );
       case 'Assets':
         return <AssetTracker />;
+      case 'Spending':
+        return <DailySpending />;
       default:
         return <div className="p-12 text-center text-slate-400">Module Coming Soon</div>;
     }
