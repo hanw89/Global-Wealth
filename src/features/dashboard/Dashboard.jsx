@@ -15,7 +15,14 @@ import {
 } from 'lucide-react';
 import { usePriceTracker } from '../../hooks/usePriceTracker.js';
 import CashFlowChart from './components/CashFlowChart.jsx';
+import CashFlowSummary from './components/CashFlowSummary.jsx';
+import ForexAnalyzer from './components/ForexAnalyzer.jsx';
+import AssetAllocation from './components/AssetAllocation.jsx';
+import MarketWatchTable from '../market-watch/components/MarketWatchTable.jsx';
+
+import HoldingsTable from '../assets/components/HoldingsTable.jsx';
 import { useAppContext } from '../../context/AppContext.jsx';
+
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import { exportToCSV } from '../../utils/exportUtils.js';
 
@@ -159,58 +166,27 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Cash Flow Summary Section */}
+        <section className="mt-12">
+          <CashFlowSummary />
+        </section>
+
         {/* Main Content: 2-Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* Left Column: US Stocks */}
-          <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center justify-between px-2">
-              <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">US Stock Holdings</h3>
-              <button className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors">View All Markets</button>
-            </div>
-            <div className="space-y-3">
-              {STOCK_METADATA.map((stock) => {
-                const liveData = prices.stocks[stock.ticker] || { price: 0, change: 0 };
-                return (
-                  <div key={stock.ticker} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.05] transition-all cursor-pointer group">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center font-bold text-[10px] text-slate-400 group-hover:text-white transition-colors">
-                        {stock.ticker}
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-white">{stock.name}</p>
-                        <p className="text-xs text-slate-500 font-mono">{stock.shares} Shares</p>
-                      </div>
-                    </div>
-                    
-                    {/* Mini Sparkline Simulation */}
-                    <div className="hidden sm:flex items-end gap-1 h-8 px-4">
-                      {stock.sparkline.map((val, i) => (
-                        <div 
-                          key={i} 
-                          className={`w-1 rounded-full transition-all duration-500 ${liveData.change >= 0 ? 'bg-emerald-500/30 group-hover:bg-emerald-500/60' : 'bg-rose-500/30 group-hover:bg-rose-500/60'}`}
-                          style={{ height: `${(val / 100) * 100}%` }}
-                        />
-                      ))}
-                    </div>
+          {/* Left Column: Comprehensive Portfolio Ledger */}
+          <div className="lg:col-span-12 space-y-8">
+            <HoldingsTable />
+          </div>
 
-                    <div className="text-right">
-                      <p className={`text-sm font-bold text-white ${privacyMode ? 'blur-sm select-none' : ''}`}>
-                        {formatUSD(liveData.price * stock.shares)}
-                      </p>
-                      <div className={`flex items-center justify-end gap-1 text-xs font-medium ${liveData.change >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {liveData.change >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
-                        {Math.abs(liveData.change).toFixed(2)}%
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {/* Asset Allocation & Real Estate Section */}
+          <div className="lg:col-span-7">
+             <MarketWatchTable />
           </div>
 
           {/* Right Column: Korean Real Estate */}
           <div className="lg:col-span-5 space-y-4">
+
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-2">KR Real Estate</h3>
             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/[0.08] backdrop-blur-2xl">
               <div className="space-y-6">
@@ -287,13 +263,22 @@ const Dashboard = () => {
 
         </div>
 
-        {/* Rental Cash Flow Chart Section */}
+        {/* Forex Strategy Section */}
+        <section className="mt-12">
+          <ForexAnalyzer />
+        </section>
+
+        {/* Portfolio Analytics Section */}
         <section className={`mt-12 transition-all duration-500 ${privacyMode ? 'opacity-20 blur-xl pointer-events-none grayscale' : 'opacity-100'}`}>
           <div className="flex items-center justify-between mb-6 px-2">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest">Global Portfolio Analytics</h3>
           </div>
-          <CashFlowChart />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <AssetAllocation />
+            <CashFlowChart />
+          </div>
         </section>
+
       </main>
     </div>
   );
