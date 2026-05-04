@@ -8,9 +8,9 @@ const RentalTrackerForm = () => {
   const { exchangeRate, privacyMode } = useAppContext();
   const [formData, setFormData] = useState({
     propertyName: '',
-    monthlyRent: '1200000',
-    managementFee: '150000',
-    taxRate: 0.1, // 10%
+    monthlyRent: '',
+    managementFee: '',
+    taxRate: 0, 
   });
 
   const calculations = useMemo(() => {

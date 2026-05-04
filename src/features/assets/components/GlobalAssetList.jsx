@@ -1,15 +1,15 @@
 import React from 'react';
 import { useAppContext } from '../../../context/AppContext.jsx';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
+import { usePortfolio } from '../../../hooks/usePortfolio.js';
 
 const GlobalAssetList = () => {
   const { currency, convertAmount } = useAppContext();
+  const { data: portfolio, isLoading } = usePortfolio();
 
-  const assets = [
-    { name: 'Total World Stock', ticker: 'VT', type: 'Equity', valueUsd: 142350 },
-    { name: 'Intermediate Treasury', ticker: 'VGIT', type: 'Fixed Income', valueUsd: 54750 },
-    { name: 'Intl Bond ETF', ticker: 'BNDX', type: 'Fixed Income', valueUsd: 21900 },
-  ];
+  const assets = portfolio?.dbAssets?.filter(a => a.type === 'Stock' || a.type === 'Crypto') || [];
+
+  if (isLoading) return <div className="p-8 text-center text-slate-500">Loading assets...</div>;
 
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
@@ -29,12 +29,12 @@ const GlobalAssetList = () => {
             {assets.map((asset, i) => (
               <tr key={i} className="text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
                 <td className="px-6 py-4">
-                  <div className="font-medium text-slate-900 dark:text-white">{asset.name}</div>
+                  <div className="font-medium text-slate-900 dark:text-white">{asset.name || asset.ticker}</div>
                   <div className="text-xs text-slate-400 font-mono">{asset.ticker}</div>
                 </td>
                 <td className="px-6 py-4">{asset.type}</td>
                 <td className="px-6 py-4 text-right tabular-nums">
-                  {formatCurrency(convertAmount(asset.valueUsd, 'USD', currency), currency)}
+                  {asset.quantity} units
                 </td>
               </tr>
             ))}

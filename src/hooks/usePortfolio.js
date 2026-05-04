@@ -80,6 +80,8 @@ export const usePortfolio = () => {
         monthlyCashFlow,
         exchangeRateUsed: FX_RATE,
         liveExchangeRate,
+        dbAssets,
+        dbRentals,
         lastUpdated: new Date().toISOString()
       };
     },
