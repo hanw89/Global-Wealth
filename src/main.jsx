@@ -6,9 +6,11 @@ import App from './App.jsx'
 import { AppProvider } from './context/AppContext.jsx';
 import { QueryProvider } from './context/QueryContext.jsx';
 
+const basename = import.meta.env.VITE_GITHUB_PAGES ? '/Global-Wealth' : '';
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter basename="/Global-Wealth">
+    <BrowserRouter basename={basename}>
       <QueryProvider>
         <AppProvider>
           <App />
