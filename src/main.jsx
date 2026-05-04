@@ -8,7 +8,7 @@ import { QueryProvider } from './context/QueryContext.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/Global-Wealth">
       <QueryProvider>
         <AppProvider>
           <App />
