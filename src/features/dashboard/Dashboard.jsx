@@ -27,24 +27,16 @@ import { formatCurrency } from '../../utils/currencyFormatter.js';
 import { exportToCSV } from '../../utils/exportUtils.js';
 
 // Static Metadata (Live prices will be merged)
-const STOCK_METADATA = [
-  { name: 'Apple Inc.', ticker: 'AAPL', shares: 80, sparkline: [40, 45, 42, 48, 52, 50, 55] },
-  { name: 'Tesla, Inc.', ticker: 'TSLA', shares: 45, sparkline: [60, 58, 55, 52, 54, 50, 48] },
-  { name: 'NVIDIA Corp.', ticker: 'NVDA', shares: 35, sparkline: [30, 35, 45, 50, 65, 75, 85] },
-  { name: 'Vanguard S&P 500', ticker: 'VOO', shares: 120, sparkline: [45, 46, 47, 46, 48, 49, 50] },
-];
+const STOCK_METADATA = [];
 
-const KOREAN_PROPERTIES = [
-  { name: 'Gangnam Studio', type: 'Wolse', rent: 1200000, deposit: 50000000, fee: 150000 },
-  { name: 'Mapo Apartment', type: 'Jeonse', rent: 0, deposit: 450000000, fee: 200000 },
-];
+const KOREAN_PROPERTIES = [];
 
 const EXCHANGE_RATE = 1350;
 
 const Dashboard = () => {
   const { privacyMode } = useAppContext();
   const { prices, lastUpdated, loading, error, refresh } = usePriceTracker({
-    stocks: STOCK_METADATA.map(s => s.ticker),
+    stocks: [],
     cryptos: ['bitcoin', 'ethereum']
   });
 
@@ -52,36 +44,16 @@ const Dashboard = () => {
   const formatKRW = (val) => formatCurrency(val, 'KRW', { privacyMode });
 
   // Calculate values based on live data
-  const totalStockValue = STOCK_METADATA.reduce((sum, stock) => {
-    const price = prices.stocks[stock.ticker]?.price || 0;
-    return sum + (price * stock.shares);
-  }, 0);
+  const totalStockValue = 0;
 
   // Fintech Feature: Tax Projections (15% Capital Gains)
-  const estimatedCapitalGainsTax = totalStockValue * 0.15;
+  const estimatedCapitalGainsTax = 0;
 
   const bitcoinPrice = prices.cryptos.bitcoin?.usd || 0;
   const bitcoinChange = prices.cryptos.bitcoin?.usd_24h_change || 0;
 
   const handleTaxExport = () => {
-    const exportData = [
-      ...STOCK_METADATA.map(s => ({
-        Asset: s.name,
-        Ticker: s.ticker,
-        Shares: s.shares,
-        'Market Price': prices.stocks[s.ticker]?.price || 0,
-        'Est. Value (USD)': (prices.stocks[s.ticker]?.price || 0) * s.shares,
-        'Est. Tax Liability (15%)': ((prices.stocks[s.ticker]?.price || 0) * s.shares) * 0.15,
-        'IRS Requirement': 'Form 8949'
-      })),
-      ...KOREAN_PROPERTIES.map(p => ({
-        Asset: p.name,
-        Type: p.type,
-        'Monthly Rent (KRW)': p.rent,
-        'USD Eq.': p.rent / EXCHANGE_RATE,
-        'IRS Requirement': 'Schedule E (Foreign)'
-      }))
-    ];
+    const exportData = [];
     exportToCSV(exportData, `GlobalWealth_Tax_Report_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
@@ -122,11 +94,10 @@ const Dashboard = () => {
             </div>
             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Net Worth</p>
             <h2 className={`text-3xl font-bold text-white mb-1 ${privacyMode ? 'blur-md select-none' : ''}`}>
-              {formatUSD(totalStockValue + 150000)}
+              {formatUSD(0)}
             </h2>
-            <div className="flex items-center gap-1 text-emerald-500 text-sm font-medium">
-              <ArrowUpRight size={14} />
-              <span>+2.4% this month</span>
+            <div className="flex items-center gap-1 text-slate-500 text-sm font-medium">
+              <span>No assets added yet</span>
             </div>
           </div>
 
@@ -190,7 +161,7 @@ const Dashboard = () => {
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-2">KR Real Estate</h3>
             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/[0.08] backdrop-blur-2xl">
               <div className="space-y-6">
-                {KOREAN_PROPERTIES.map((prop, idx) => (
+                {KOREAN_PROPERTIES.length > 0 ? KOREAN_PROPERTIES.map((prop, idx) => (
                   <div key={idx} className="pb-6 border-b border-white/[0.05] last:border-0 last:pb-0">
                     <div className="flex justify-between items-start mb-4">
                       <div>
@@ -229,7 +200,12 @@ const Dashboard = () => {
                       </p>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <div className="py-8 text-center">
+                    <Home size={32} className="mx-auto text-slate-600 mb-3 opacity-20" />
+                    <p className="text-xs text-slate-500 font-medium">No real estate assets added</p>
+                  </div>
+                )}
               </div>
               
               <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
@@ -244,7 +220,7 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right">
                     <p className={`text-xl font-black text-white ${privacyMode ? 'blur-sm select-none' : ''}`}>
-                      $1,240.50
+                      {formatUSD(0)}
                     </p>
                     <p className="text-[10px] text-slate-500">Net after fees</p>
                 </div>

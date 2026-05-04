@@ -19,15 +19,9 @@ const TARGETS = {
   Cash: 30
 };
 
-const MOCK_HOLDINGS = [
-  { id: 'bitcoin', ticker: 'BTC', name: 'Bitcoin', amount: 0.45, type: 'crypto' },
-  { id: 'ethereum', ticker: 'ETH', name: 'Ethereum', amount: 3.2, type: 'crypto' },
-  { ticker: 'AAPL', name: 'Apple Inc.', amount: 15, type: 'stock' },
-  { ticker: 'TSLA', name: 'Tesla, Inc.', amount: 10, type: 'stock' },
-  { ticker: 'NVDA', name: 'NVIDIA', amount: 5, type: 'stock' },
-];
+const MOCK_HOLDINGS = [];
 
-const KOREAN_RENT_VALUE_USD = 1240.50 * 12; // Annualizing the cash flow as "Cash" asset
+const KOREAN_RENT_VALUE_USD = 0;
 
 const COLORS = {
   Stocks: '#6366f1',
@@ -38,25 +32,22 @@ const COLORS = {
 const AssetAllocation = () => {
   const { privacyMode } = useAppContext();
 
-  const { data, isLoading } = useMarketData(
-    MOCK_HOLDINGS.filter(h => h.type === 'stock').map(h => h.ticker),
-    MOCK_HOLDINGS.filter(h => h.type === 'crypto').map(h => h.id)
-  );
+  const { data, isLoading } = useMarketData([], []);
 
   const allocationData = useMemo(() => {
     if (!data) return [];
 
-    const stockVal = MOCK_HOLDINGS
-      .filter(h => h.type === 'stock')
-      .reduce((sum, h) => sum + (data.stocks?.[h.ticker]?.price || 0) * h.amount, 0);
-
-    const cryptoVal = MOCK_HOLDINGS
-      .filter(h => h.type === 'crypto')
-      .reduce((sum, h) => sum + (data.cryptos?.[h.id]?.usd || 0) * h.amount, 0);
-
-    const cashVal = KOREAN_RENT_VALUE_USD; // Treating annualized rent as the cash component
+    const stockVal = 0;
+    const cryptoVal = 0;
+    const cashVal = 0;
 
     const total = stockVal + cryptoVal + cashVal;
+
+    if (total === 0) return [
+      { name: 'Stocks', value: 0, percent: 0 },
+      { name: 'Crypto', value: 0, percent: 0 },
+      { name: 'Cash', value: 0, percent: 0 }
+    ];
 
     return [
       { name: 'Stocks', value: stockVal, percent: (stockVal / total) * 100 },

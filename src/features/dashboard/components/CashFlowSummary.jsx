@@ -25,19 +25,20 @@ const CashFlowSummary = () => {
     return exchangeRate < (avg30 * 0.98);
   }, [history, exchangeRate]);
 
-  // Mock Data (matches user examples)
+  // Clean state (no dummy data)
 
-  const usDividends = 840;
-  const cryptoStaking = 320;
-  const koreanRentKrw = 2500000;
+  const usDividends = 0;
+  const cryptoStaking = 0;
+  const koreanRentKrw = 0;
   const koreanRentUsd = koreanRentKrw / exchangeRate;
 
   const totalMonthlyIncomeUsd = usDividends + cryptoStaking + koreanRentUsd;
 
   // Proportions for the breakdown bar
-  const divPercent = (usDividends / totalMonthlyIncomeUsd) * 100;
-  const cryptoPercent = (cryptoStaking / totalMonthlyIncomeUsd) * 100;
-  const rentPercent = (koreanRentUsd / totalMonthlyIncomeUsd) * 100;
+  const total = totalMonthlyIncomeUsd || 1; // Avoid division by zero
+  const divPercent = (usDividends / total) * 100;
+  const cryptoPercent = (cryptoStaking / total) * 100;
+  const rentPercent = (koreanRentUsd / total) * 100;
 
   const formatUSD = (val) => formatCurrency(val, 'USD', { privacyMode });
   const formatKRW = (val) => formatCurrency(val, 'KRW', { privacyMode });

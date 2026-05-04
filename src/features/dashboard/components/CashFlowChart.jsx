@@ -13,18 +13,18 @@ import {
 } from 'recharts';
 
 const data = [
-  { month: 'May 25', krw: 1200000, usd: 888 },
-  { month: 'Jun 25', krw: 1200000, usd: 870 },
-  { month: 'Jul 25', krw: 1200000, usd: 865 },
-  { month: 'Aug 25', krw: 1250000, usd: 910 },
-  { month: 'Sep 25', krw: 1250000, usd: 905 },
-  { month: 'Oct 25', krw: 1250000, usd: 920 },
-  { month: 'Nov 25', krw: 1250000, usd: 915 },
-  { month: 'Dec 25', krw: 1300000, usd: 960 },
-  { month: 'Jan 26', krw: 1300000, usd: 955 },
-  { month: 'Feb 26', krw: 1300000, usd: 965 },
-  { month: 'Mar 26', krw: 1300000, usd: 960 },
-  { month: 'Apr 26', krw: 1300000, usd: 962 },
+  { month: 'May 25', krw: 0, usd: 0 },
+  { month: 'Jun 25', krw: 0, usd: 0 },
+  { month: 'Jul 25', krw: 0, usd: 0 },
+  { month: 'Aug 25', krw: 0, usd: 0 },
+  { month: 'Sep 25', krw: 0, usd: 0 },
+  { month: 'Oct 25', krw: 0, usd: 0 },
+  { month: 'Nov 25', krw: 0, usd: 0 },
+  { month: 'Dec 25', krw: 0, usd: 0 },
+  { month: 'Jan 26', krw: 0, usd: 0 },
+  { month: 'Feb 26', krw: 0, usd: 0 },
+  { month: 'Mar 26', krw: 0, usd: 0 },
+  { month: 'Apr 26', krw: 0, usd: 0 },
 ];
 
 const CashFlowChart = () => {

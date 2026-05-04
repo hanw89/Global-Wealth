@@ -4,12 +4,7 @@ import { formatCurrency } from '../../../utils/currencyFormatter.js';
 
 const ExpenseLog = () => {
   const { currency, convertAmount } = useAppContext();
-  const [expenses, setExpenses] = useState([
-    { id: 1, date: '2026-04-27', description: 'Emart Grocery', category: 'Groceries', amountUsd: 85.20 },
-    { id: 2, date: '2026-04-26', description: 'Monthly Rent', category: 'Housing', amountUsd: 3200.00 },
-    { id: 3, date: '2026-04-25', description: 'Starbucks', category: 'Food', amountUsd: 6.50 },
-    { id: 4, date: '2026-04-24', description: 'Gas Station', category: 'Transport', amountUsd: 55.00 },
-  ]);
+  const [expenses, setExpenses] = useState([]);
 
   const [newExpense, setNewExpense] = useState({ description: '', amount: '', category: 'Food' });
 
