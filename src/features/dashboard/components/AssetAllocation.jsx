@@ -8,6 +8,7 @@ import {
   Legend 
 } from 'recharts';
 import { AlertTriangle, CheckCircle2, RefreshCw, PieChart as PieIcon, ArrowRight } from 'lucide-react';
+import { usePortfolio } from '../../../hooks/usePortfolio.js';
 import { useMarketData } from '../../../hooks/useMarketData.js';
 import { useAppContext } from '../../../context/AppContext.jsx';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
@@ -16,45 +17,65 @@ import { formatCurrency } from '../../../utils/currencyFormatter.js';
 const TARGETS = {
   Stocks: 40,
   Crypto: 30,
-  Cash: 30
+  RealEstate: 30
 };
-
-const MOCK_HOLDINGS = [];
-
-const KOREAN_RENT_VALUE_USD = 0;
 
 const COLORS = {
   Stocks: '#6366f1',
   Crypto: '#f59e0b',
-  Cash: '#10b981'
+  RealEstate: '#10b981'
 };
 
 const AssetAllocation = () => {
   const { privacyMode } = useAppContext();
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
 
-  const { data, isLoading } = useMarketData([], []);
+  const stockTickers = useMemo(() => portfolio?.dbAssets?.filter(a => a.type === 'Stock').map(a => a.ticker) || [], [portfolio]);
+  const cryptoIds = useMemo(() => portfolio?.dbAssets?.filter(a => a.type === 'Crypto').map(a => {
+    const t = a.ticker.toLowerCase();
+    if (t === 'btc') return 'bitcoin';
+    if (t === 'eth') return 'ethereum';
+    return t;
+  }) || [], [portfolio]);
+
+  const { data: marketData, isLoading: isMarketLoading } = useMarketData(stockTickers, cryptoIds);
+
+  const isLoading = isPortfolioLoading || isMarketLoading;
 
   const allocationData = useMemo(() => {
-    if (!data) return [];
+    if (!portfolio || !marketData) return [];
 
-    const stockVal = 0;
-    const cryptoVal = 0;
-    const cashVal = 0;
+    let stockVal = 0;
+    let cryptoVal = 0;
+    
+    portfolio.dbAssets?.forEach(asset => {
+      if (asset.type === 'Stock') {
+        const price = marketData.stocks?.[asset.ticker]?.price || 0;
+        stockVal += price * asset.quantity;
+      } else if (asset.type === 'Crypto') {
+        const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
+                   asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : asset.ticker.toLowerCase();
+        const price = marketData.cryptos?.[id]?.usd || 0;
+        cryptoVal += price * asset.quantity;
+      }
+    });
 
-    const total = stockVal + cryptoVal + cashVal;
+    const realEstateVal = portfolio.monthlyCashFlow * 12; // Simplified: Annualized rent as "value" proxy or use deposit
+
+    const total = stockVal + cryptoVal + realEstateVal;
 
     if (total === 0) return [
       { name: 'Stocks', value: 0, percent: 0 },
       { name: 'Crypto', value: 0, percent: 0 },
-      { name: 'Cash', value: 0, percent: 0 }
+      { name: 'RealEstate', value: 0, percent: 0 }
     ];
 
     return [
       { name: 'Stocks', value: stockVal, percent: (stockVal / total) * 100 },
       { name: 'Crypto', value: cryptoVal, percent: (cryptoVal / total) * 100 },
-      { name: 'Cash', value: cashVal, percent: (cashVal / total) * 100 }
+      { name: 'RealEstate', value: realEstateVal, percent: (realEstateVal / total) * 100 }
     ];
-  }, [data]);
+  }, [portfolio, marketData]);
 
   const rebalanceAdvice = useMemo(() => {
     if (!allocationData.length) return null;

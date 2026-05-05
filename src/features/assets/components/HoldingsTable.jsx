@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Layers
 } from 'lucide-react';
+import { usePortfolio } from '../../../hooks/usePortfolio.js';
 import { useMarketData } from '../../../hooks/useMarketData.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { useAppContext } from '../../../context/AppContext.jsx';
@@ -16,34 +17,54 @@ const SortIcon = ({ column, sortConfig }) => {
   return sortConfig.direction === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />;
 };
 
-const MOCK_HOLDINGS = [
-  { id: 'bitcoin', ticker: 'BTC', name: 'Bitcoin', amount: 0.45, type: 'crypto', avgPrice: 42000, color: '#f7931a' },
-  { id: 'ethereum', ticker: 'ETH', name: 'Ethereum', amount: 3.2, type: 'crypto', avgPrice: 2100, color: '#627eea' },
-  { ticker: 'AAPL', name: 'Apple Inc.', amount: 15, type: 'stock', avgPrice: 175, color: '#ffffff' },
-  { ticker: 'TSLA', name: 'Tesla, Inc.', amount: 10, type: 'stock', avgPrice: 240, color: '#cc0000' },
-  { ticker: 'NVDA', name: 'NVIDIA', amount: 5, type: 'stock', avgPrice: 450, color: '#76b900' },
-  { id: 'solana', ticker: 'SOL', name: 'Solana', amount: 120, type: 'crypto', avgPrice: 95, color: '#14f195' },
-];
+const getAssetColor = (ticker, type) => {
+  if (type === 'Crypto') {
+    const colors = {
+      'BTC': '#f7931a',
+      'ETH': '#627eea',
+      'SOL': '#14f195',
+      'BNB': '#f3ba2f',
+      'XRP': '#23292f'
+    };
+    return colors[ticker.toUpperCase()] || '#orange-500';
+  }
+  return '#6366f1'; // Default for stocks
+};
 
 const HoldingsTable = () => {
   const { privacyMode } = useAppContext();
-  const [sortConfig, setSortConfig] = useState({ key: 'value', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'totalValue', direction: 'desc' });
 
-  const { data, isLoading } = useMarketData(
-    MOCK_HOLDINGS.filter(h => h.type === 'stock').map(h => h.ticker),
-    MOCK_HOLDINGS.filter(h => h.type === 'crypto').map(h => h.id)
-  );
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
+  
+  const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
+
+  const stockTickers = useMemo(() => dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker), [dbAssets]);
+  const cryptoIds = useMemo(() => dbAssets.filter(a => a.type === 'Crypto').map(a => {
+    const t = a.ticker.toLowerCase();
+    if (t === 'btc') return 'bitcoin';
+    if (t === 'eth') return 'ethereum';
+    if (t === 'sol') return 'solana';
+    return t;
+  }), [dbAssets]);
+
+  const { data: marketData, isLoading: isMarketLoading } = useMarketData(stockTickers, cryptoIds);
+
+  const isLoading = isPortfolioLoading || isMarketLoading;
 
   const formatVal = (val, cur = 'USD') => formatCurrency(val, cur, { privacyMode });
 
   // Process data with Profit/Loss calculations
   const tableData = useMemo(() => {
-    return MOCK_HOLDINGS.map(holding => {
+    return dbAssets.map(asset => {
       let priceData;
-      if (holding.type === 'stock') {
-        priceData = data?.stocks?.[holding.ticker];
+      if (asset.type === 'Stock') {
+        priceData = marketData?.stocks?.[asset.ticker];
       } else {
-        priceData = data?.cryptos?.[holding.id];
+        const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
+                   asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : 
+                   asset.ticker.toLowerCase() === 'sol' ? 'solana' : asset.ticker.toLowerCase();
+        priceData = marketData?.cryptos?.[id];
         if (priceData && !priceData.price) {
           priceData = { price: priceData.usd, change: priceData.usd_24h_change };
         }
@@ -51,13 +72,16 @@ const HoldingsTable = () => {
 
       const currentPrice = priceData?.price || 0;
       const change24h = priceData?.change || 0;
-      const totalValue = currentPrice * holding.amount;
-      const costBasis = holding.avgPrice * holding.amount;
+      const totalValue = currentPrice * asset.quantity;
+      const costBasis = (asset.avg_buy_price || 0) * asset.quantity;
       const profitLoss = totalValue - costBasis;
       const profitLossPercent = costBasis > 0 ? (profitLoss / costBasis) * 100 : 0;
 
       return {
-        ...holding,
+        ...asset,
+        name: asset.ticker, // Use ticker as name if not available in DB
+        amount: asset.quantity,
+        color: getAssetColor(asset.ticker, asset.type),
         currentPrice,
         change24h,
         totalValue,
@@ -65,7 +89,7 @@ const HoldingsTable = () => {
         profitLossPercent
       };
     });
-  }, [data]);
+  }, [dbAssets, marketData]);
 
   // Sorting Logic
   const sortedData = useMemo(() => {

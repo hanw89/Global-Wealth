@@ -3,15 +3,19 @@ import { TrendingUp, Globe, DollarSign, Wallet, Home, Zap, ArrowUpRight, CheckCi
 import { useAppContext } from '../../../context/AppContext.jsx';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { fetchHistoricalForex } from '../../../services/marketService.js';
+import { usePortfolio } from '../../../hooks/usePortfolio.js';
 
 const CashFlowSummary = () => {
-  const { exchangeRate, privacyMode } = useAppContext();
+  const { privacyMode } = useAppContext();
+  const { data: portfolio, isLoading } = usePortfolio();
   const [showKrw, setShowKrw] = useState(false);
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
     fetchHistoricalForex().then(setHistory);
   }, []);
+
+  const exchangeRate = portfolio?.exchangeRateUsed || 1350;
 
   const forexAlert = useMemo(() => {
     if (!history.length || !exchangeRate) return false;
@@ -21,27 +25,28 @@ const CashFlowSummary = () => {
     const avg30 = last30.reduce((sum, d) => sum + d.close, 0) / last30.length;
     
     // Won is "stronger" if exchangeRate (USD/KRW) is LOWER than average
-    // 2% stronger means rate is < 98% of average
     return exchangeRate < (avg30 * 0.98);
   }, [history, exchangeRate]);
 
-  // Clean state (no dummy data)
-
-  const usDividends = 0;
-  const cryptoStaking = 0;
-  const koreanRentKrw = 0;
-  const koreanRentUsd = koreanRentKrw / exchangeRate;
+  const usDividends = 0; 
+  const cryptoStaking = 0; 
+  const koreanRentUsd = portfolio?.monthlyCashFlow || 0;
+  const koreanRentKrw = koreanRentUsd * exchangeRate;
 
   const totalMonthlyIncomeUsd = usDividends + cryptoStaking + koreanRentUsd;
 
   // Proportions for the breakdown bar
-  const total = totalMonthlyIncomeUsd || 1; // Avoid division by zero
+  const total = totalMonthlyIncomeUsd || 1; 
   const divPercent = (usDividends / total) * 100;
   const cryptoPercent = (cryptoStaking / total) * 100;
   const rentPercent = (koreanRentUsd / total) * 100;
 
   const formatUSD = (val) => formatCurrency(val, 'USD', { privacyMode });
   const formatKRW = (val) => formatCurrency(val, 'KRW', { privacyMode });
+
+  const firstRental = portfolio?.dbRentals?.[0];
+
+  if (isLoading) return <div className="h-64 rounded-[2.5rem] bg-[#0f0f12] animate-pulse border border-white/5" />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -66,7 +71,7 @@ const CashFlowSummary = () => {
             </div>
             <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
               <TrendingUp size={16} />
-              <span>+12.5% from last quarter</span>
+              <span>{portfolio?.dbRentals?.length || 0} Passive Streams Active</span>
             </div>
           </div>
 
@@ -150,8 +155,12 @@ const CashFlowSummary = () => {
           )}
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Foreign Asset Income</p>
 
-          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">Seoul Rental A</h3>
-          <p className="text-xs text-slate-500 mb-6 font-medium">Gangnam District 4-12</p>
+          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-indigo-400 transition-colors">
+            {firstRental ? firstRental.property_name : 'No Property'}
+          </h3>
+          <p className="text-xs text-slate-500 mb-6 font-medium">
+            {firstRental ? 'Registered Korean Asset' : 'Add property in Assets'}
+          </p>
           
           <div className={`text-4xl font-black text-white tracking-tighter transition-all duration-500 ${privacyMode ? 'blur-xl select-none' : ''}`}>
             {showKrw ? formatKRW(koreanRentKrw) : formatUSD(koreanRentUsd)}

@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Clock
 } from 'lucide-react';
+import { usePortfolio } from '../../hooks/usePortfolio.js';
 import { usePriceTracker } from '../../hooks/usePriceTracker.js';
 import CashFlowChart from './components/CashFlowChart.jsx';
 import CashFlowSummary from './components/CashFlowSummary.jsx';
@@ -26,28 +27,26 @@ import { useAppContext } from '../../context/AppContext.jsx';
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import { exportToCSV } from '../../utils/exportUtils.js';
 
-// Static Metadata (Live prices will be merged)
-const STOCK_METADATA = [];
-
-const KOREAN_PROPERTIES = [];
-
-const EXCHANGE_RATE = 1350;
-
 const Dashboard = () => {
   const { privacyMode } = useAppContext();
-  const { prices, lastUpdated, loading, error, refresh } = usePriceTracker({
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
+  const { prices, lastUpdated, loading: isPricesLoading, error, refresh } = usePriceTracker({
     stocks: [],
     cryptos: ['bitcoin', 'ethereum']
   });
+
+  const loading = isPortfolioLoading || isPricesLoading;
 
   const formatUSD = (val) => formatCurrency(val, 'USD', { privacyMode });
   const formatKRW = (val) => formatCurrency(val, 'KRW', { privacyMode });
 
   // Calculate values based on live data
-  const totalStockValue = 0;
+  const totalNetWorth = portfolio?.totalValue || 0;
+  const totalRentUsd = portfolio?.monthlyCashFlow || 0;
+  const exchangeRateUsed = portfolio?.exchangeRateUsed || 1350;
 
   // Fintech Feature: Tax Projections (15% Capital Gains)
-  const estimatedCapitalGainsTax = 0;
+  const estimatedCapitalGainsTax = totalNetWorth * 0.15;
 
   const bitcoinPrice = prices.cryptos.bitcoin?.usd || 0;
   const bitcoinChange = prices.cryptos.bitcoin?.usd_24h_change || 0;
@@ -94,10 +93,10 @@ const Dashboard = () => {
             </div>
             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">Total Net Worth</p>
             <h2 className={`text-3xl font-bold text-white mb-1 ${privacyMode ? 'blur-md select-none' : ''}`}>
-              {formatUSD(0)}
+              {formatUSD(totalNetWorth)}
             </h2>
             <div className="flex items-center gap-1 text-slate-500 text-sm font-medium">
-              <span>No assets added yet</span>
+              <span>{portfolio?.dbAssets?.length || 0} Assets Registered</span>
             </div>
           </div>
 
@@ -161,19 +160,19 @@ const Dashboard = () => {
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-2">KR Real Estate</h3>
             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/[0.08] backdrop-blur-2xl">
               <div className="space-y-6">
-                {KOREAN_PROPERTIES.length > 0 ? KOREAN_PROPERTIES.map((prop, idx) => (
+                {portfolio?.dbRentals?.length > 0 ? portfolio.dbRentals.map((prop, idx) => (
                   <div key={idx} className="pb-6 border-b border-white/[0.05] last:border-0 last:pb-0">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h4 className="font-bold text-white">{prop.name}</h4>
+                        <h4 className="font-bold text-white">{prop.property_name}</h4>
                         <span className="inline-block mt-1 text-[9px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-bold uppercase tracking-wider">
-                          {prop.type}
+                          Real Estate
                         </span>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Deposit</p>
                         <p className={`text-xs text-slate-300 font-mono ${privacyMode ? 'blur-sm select-none' : ''}`}>
-                          {formatKRW(prop.deposit)}
+                          {formatKRW(0)}
                         </p>
                       </div>
                     </div>
@@ -182,13 +181,13 @@ const Dashboard = () => {
                       <div>
                         <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">Monthly Flow</p>
                         <p className={`text-lg font-black text-emerald-400 ${privacyMode ? 'blur-sm select-none' : ''}`}>
-                          {formatKRW(prop.rent)}
+                          {formatKRW(prop.monthly_amount_krw)}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-1">USD Eq.</p>
                         <p className={`text-lg font-black text-white ${privacyMode ? 'blur-sm select-none' : ''}`}>
-                          {formatUSD(prop.rent / EXCHANGE_RATE)}
+                          {formatUSD(prop.monthly_amount_krw / exchangeRateUsed)}
                         </p>
                       </div>
                     </div>
@@ -220,7 +219,7 @@ const Dashboard = () => {
                 </div>
                 <div className="text-right">
                     <p className={`text-xl font-black text-white ${privacyMode ? 'blur-sm select-none' : ''}`}>
-                      {formatUSD(0)}
+                      {formatUSD(totalRentUsd)}
                     </p>
                     <p className="text-[10px] text-slate-500">Net after fees</p>
                 </div>
