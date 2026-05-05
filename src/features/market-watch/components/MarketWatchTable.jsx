@@ -6,8 +6,8 @@ import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { useAppContext } from '../../../context/AppContext.jsx';
 
 const MarketWatchTable = () => {
-  const { privacyMode } = useAppContext();
-  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
+  const { privacyMode, exchangeRate } = useAppContext();
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
   
   const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
 

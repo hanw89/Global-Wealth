@@ -1,22 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchExchangeRate } from '../services/marketService.js';
+import { useExchangeRate } from '../hooks/useExchangeRate.js';
 
 const AppContext = createContext();
 
 export const AppProvider = ({ children }) => {
   const [theme, setTheme] = useState(localStorage.getItem('app-theme') || 'light');
   const [currency, setCurrency] = useState(localStorage.getItem('app-currency') || 'USD');
-  const [exchangeRate, setExchangeRate] = useState(1350); // Initial placeholder
   const [privacyMode, setPrivacyMode] = useState(false);
 
-  useEffect(() => {
-    // Fetch live rate on mount
-    const updateRate = async () => {
-      const rate = await fetchExchangeRate();
-      setExchangeRate(rate);
-    };
-    updateRate();
-  }, []);
+  // Live Exchange Rate Synchronization
+  const { data: liveRate, dataUpdatedAt: rateLastUpdated } = useExchangeRate();
+  const exchangeRate = liveRate || 1350; // Fallback to baseline
 
   useEffect(() => {
     localStorage.setItem('app-theme', theme);
@@ -49,7 +43,7 @@ export const AppProvider = ({ children }) => {
       currency, 
       setCurrency, 
       exchangeRate, 
-      setExchangeRate,
+      rateLastUpdated,
       convertAmount,
       privacyMode,
       togglePrivacyMode

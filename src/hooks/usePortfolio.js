@@ -6,7 +6,7 @@ import { fetchCryptoPrices, fetchStockPrices, fetchExchangeRate } from '../servi
  * Senior Fintech Hook: usePortfolio
  * Orchestrates global asset state, live valuations, and cash flow analysis.
  */
-export const usePortfolio = () => {
+export const usePortfolio = (globalExchangeRate) => {
   return useQuery({
     queryKey: ['portfolio-unified'],
     queryFn: async () => {
@@ -38,14 +38,13 @@ export const usePortfolio = () => {
         return t;
       });
 
-      const [stockPrices, cryptoPrices, liveExchangeRate] = await Promise.all([
+      const [stockPrices, cryptoPrices] = await Promise.all([
         fetchStockPrices(stockTickers).catch(() => ({})),
         fetchCryptoPrices(cryptoIds).catch(() => ({})),
-        fetchExchangeRate().catch(() => 1471)
       ]);
 
       // 4. Financial Calculations
-      const FX_RATE = liveExchangeRate || 1471; 
+      const FX_RATE = globalExchangeRate || 1350; 
 
       let stockValue = 0;
       let cryptoValue = 0;
@@ -79,7 +78,6 @@ export const usePortfolio = () => {
         cryptoValue,
         monthlyCashFlow,
         exchangeRateUsed: FX_RATE,
-        liveExchangeRate,
         dbAssets,
         dbRentals,
         lastUpdated: new Date().toISOString()

@@ -27,8 +27,8 @@ const COLORS = {
 };
 
 const AssetAllocation = () => {
-  const { privacyMode } = useAppContext();
-  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
+  const { privacyMode, exchangeRate } = useAppContext();
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
 
   const stockTickers = useMemo(() => portfolio?.dbAssets?.filter(a => a.type === 'Stock').map(a => a.ticker) || [], [portfolio]);
   const cryptoIds = useMemo(() => portfolio?.dbAssets?.filter(a => a.type === 'Crypto').map(a => {

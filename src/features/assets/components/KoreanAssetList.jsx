@@ -4,8 +4,8 @@ import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
 
 const KoreanAssetList = () => {
-  const { currency, convertAmount } = useAppContext();
-  const { data: portfolio, isLoading, error } = usePortfolio();
+  const { currency, convertAmount, exchangeRate } = useAppContext();
+  const { data: portfolio, isLoading, error } = usePortfolio(exchangeRate);
 
   const rentals = portfolio?.dbRentals || [];
 

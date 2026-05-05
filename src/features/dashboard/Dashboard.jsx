@@ -28,8 +28,8 @@ import { formatCurrency } from '../../utils/currencyFormatter.js';
 import { exportToCSV } from '../../utils/exportUtils.js';
 
 const Dashboard = () => {
-  const { privacyMode } = useAppContext();
-  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
+  const { privacyMode, exchangeRate, rateLastUpdated } = useAppContext();
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
   const { prices, lastUpdated, loading: isPricesLoading, error, refresh } = usePriceTracker({
     stocks: [],
     cryptos: ['bitcoin', 'ethereum']
@@ -43,7 +43,6 @@ const Dashboard = () => {
   // Calculate values based on live data
   const totalNetWorth = portfolio?.totalValue || 0;
   const totalRentUsd = portfolio?.monthlyCashFlow || 0;
-  const exchangeRateUsed = portfolio?.exchangeRateUsed || 1350;
 
   // Fintech Feature: Tax Projections (15% Capital Gains)
   const estimatedCapitalGainsTax = totalNetWorth * 0.15;
@@ -62,11 +61,21 @@ const Dashboard = () => {
         
         {/* Market Status Bar */}
         <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-1.5">
               <div className={`w-1.5 h-1.5 rounded-full ${loading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
               <span>{loading ? 'Fetching Markets...' : 'Markets Live'}</span>
             </div>
+            
+            {/* Forex Live Sync Status */}
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+              <Globe size={10} />
+              <span>USD/KRW: {exchangeRate.toFixed(2)}</span>
+              {rateLastUpdated && (
+                <span className="opacity-60 font-medium">Sync: {new Date(rateLastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              )}
+            </div>
+
             {lastUpdated && (
               <div className="flex items-center gap-1.5">
                 <Clock size={12} />

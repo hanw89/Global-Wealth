@@ -32,10 +32,10 @@ const getAssetColor = (ticker, type) => {
 };
 
 const HoldingsTable = () => {
-  const { privacyMode } = useAppContext();
+  const { privacyMode, exchangeRate } = useAppContext();
   const [sortConfig, setSortConfig] = useState({ key: 'totalValue', direction: 'desc' });
 
-  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
   
   const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
 
