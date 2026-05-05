@@ -23,12 +23,12 @@ const RentalTrackerForm = () => {
 
       const { error } = await supabase
         .from('rental_income')
-        .upsert({
+        .insert({
           user_id: user.id,
           property_name: data.propertyName,
           monthly_amount_krw: parseFloat(data.monthlyRent),
           next_payment_date: new Date().toISOString().split('T')[0],
-        }, { onConflict: 'user_id,property_name' });
+        });
 
       if (error) throw error;
     },

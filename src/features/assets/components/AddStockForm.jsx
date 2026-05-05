@@ -15,13 +15,13 @@ const AddStockForm = () => {
 
       const { error } = await supabase
         .from('assets')
-        .upsert({
+        .insert({
           user_id: user.id,
           type: 'Stock',
           ticker: data.ticker.toUpperCase(),
           quantity: parseFloat(data.quantity),
-          avg_buy_price: 0, // Placeholder as per specific request fields
-        }, { onConflict: 'user_id,ticker,type' });
+          avg_buy_price: 0,
+        });
 
       if (error) throw error;
     },

@@ -15,13 +15,13 @@ const AddCryptoForm = () => {
 
       const { error } = await supabase
         .from('assets')
-        .upsert({
+        .insert({
           user_id: user.id,
           type: 'Crypto',
           ticker: data.symbol.toUpperCase(),
           quantity: parseFloat(data.quantity),
           avg_buy_price: 0,
-        }, { onConflict: 'user_id,ticker,type' });
+        });
 
       if (error) throw error;
     },
