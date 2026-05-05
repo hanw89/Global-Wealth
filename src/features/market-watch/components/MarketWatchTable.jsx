@@ -1,57 +1,73 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { AlertCircle, ArrowUpRight, ArrowDownRight, RefreshCw, Zap, Clock } from 'lucide-react';
 import { useMarketData } from '../../../hooks/useMarketData.js';
+import { usePortfolio } from '../../../hooks/usePortfolio.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { useAppContext } from '../../../context/AppContext.jsx';
 
-const MOCK_HOLDINGS = [
-  { id: 'bitcoin', ticker: 'BTC', name: 'Bitcoin', amount: 0.45, type: 'crypto' },
-  { id: 'ethereum', ticker: 'ETH', name: 'Ethereum', amount: 3.2, type: 'crypto' },
-  { ticker: 'AAPL', name: 'Apple Inc.', amount: 15, type: 'stock' },
-  { ticker: 'TSLA', name: 'Tesla, Inc.', amount: 10, type: 'stock' },
-  { ticker: 'NVDA', name: 'NVIDIA', amount: 5, type: 'stock' },
-];
-
 const MarketWatchTable = () => {
   const { privacyMode } = useAppContext();
+  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio();
   
+  const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
+
+  const stockTickers = useMemo(() => dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker), [dbAssets]);
+  const cryptoIds = useMemo(() => dbAssets.filter(a => a.type === 'Crypto').map(a => {
+    const t = a.ticker.toLowerCase();
+    if (t === 'btc') return 'bitcoin';
+    if (t === 'eth') return 'ethereum';
+    if (t === 'sol') return 'solana';
+    return t;
+  }), [dbAssets]);
+
   // High-reliability Fintech Strategy: Use TanStack Query
   const { 
-    data, 
-    isLoading, 
+    data: marketData, 
+    isLoading: isMarketLoading, 
     isError, 
     refetch, 
     isFetching,
     dataUpdatedAt 
-  } = useMarketData(
-    MOCK_HOLDINGS.filter(h => h.type === 'stock').map(h => h.ticker),
-    MOCK_HOLDINGS.filter(h => h.type === 'crypto').map(h => h.id)
-  );
+  } = useMarketData(stockTickers, cryptoIds);
+
+  const isLoading = isPortfolioLoading || isMarketLoading;
 
   const formatVal = (val) => formatCurrency(val, 'USD', { privacyMode });
 
   // Map holdings to their live (or last known) prices
-  const processedHoldings = MOCK_HOLDINGS.map(holding => {
-    let priceData;
-    if (holding.type === 'stock') {
-      priceData = data?.stocks?.[holding.ticker];
-    } else {
-      priceData = data?.cryptos?.[holding.id];
-      // Normalize CoinGecko's nested structure if needed
-      if (priceData && !priceData.price) {
-        priceData = {
-          price: priceData.usd,
-          change: priceData.usd_24h_change
-        };
+  const processedHoldings = useMemo(() => {
+    return dbAssets.map(asset => {
+      let priceData;
+      if (asset.type === 'Stock') {
+        priceData = marketData?.stocks?.[asset.ticker];
+      } else {
+        const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
+                   asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : 
+                   asset.ticker.toLowerCase() === 'sol' ? 'solana' : asset.ticker.toLowerCase();
+        priceData = marketData?.cryptos?.[id];
+        // Normalize CoinGecko's nested structure if needed
+        if (priceData && !priceData.price) {
+          priceData = {
+            price: priceData.usd,
+            change: priceData.usd_24h_change
+          };
+        }
       }
-    }
 
-    const price = priceData?.price || 0;
-    const change = priceData?.change || 0;
-    const value = price * holding.amount;
+      const price = priceData?.price || 0;
+      const change = priceData?.change || 0;
+      const value = price * asset.quantity;
 
-    return { ...holding, price, change, value };
-  });
+      return { 
+        ...asset, 
+        name: asset.ticker, // Default name to ticker if not provided
+        amount: asset.quantity,
+        price, 
+        change, 
+        value 
+      };
+    });
+  }, [dbAssets, marketData]);
 
   const totalValue = processedHoldings.reduce((sum, h) => sum + h.value, 0);
   const cryptoVolatility = processedHoldings
