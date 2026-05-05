@@ -26,6 +26,7 @@ const AddStockForm = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio-unified'] });
       queryClient.invalidateQueries({ queryKey: ['marketData'] });
       reset();
       alert('Stock portfolio synchronized.');
