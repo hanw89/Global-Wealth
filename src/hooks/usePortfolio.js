@@ -39,13 +39,13 @@ export const usePortfolio = () => {
       });
 
       const [stockPrices, cryptoPrices, liveExchangeRate] = await Promise.all([
-        fetchStockPrices(stockTickers),
-        fetchCryptoPrices(cryptoIds),
-        fetchExchangeRate()
+        fetchStockPrices(stockTickers).catch(() => ({})),
+        fetchCryptoPrices(cryptoIds).catch(() => ({})),
+        fetchExchangeRate().catch(() => 1471)
       ]);
 
       // 4. Financial Calculations
-      const FX_RATE = 1471; // Requested baseline rate
+      const FX_RATE = liveExchangeRate || 1471; 
 
       let stockValue = 0;
       let cryptoValue = 0;
@@ -54,21 +54,21 @@ export const usePortfolio = () => {
       // Calculate Assets
       dbAssets.forEach(asset => {
         if (asset.type === 'Stock') {
-          const price = stockPrices[asset.ticker]?.price || 0;
-          stockValue += price * asset.quantity;
+          const price = stockPrices?.[asset.ticker]?.price || 0;
+          stockValue += price * (asset.quantity || 0);
         } else if (asset.type === 'Crypto') {
           // Normalize CoinGecko response
           const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
                      asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : 
                      asset.ticker.toLowerCase() === 'sol' ? 'solana' : asset.ticker.toLowerCase();
-          const price = cryptoPrices[id]?.usd || 0;
-          cryptoValue += price * asset.quantity;
+          const price = cryptoPrices?.[id]?.usd || 0;
+          cryptoValue += price * (asset.quantity || 0);
         }
       });
 
       // Calculate Cash Flow (Convert KRW to USD)
       dbRentals.forEach(rental => {
-        monthlyCashFlow += (rental.monthly_amount_krw / FX_RATE);
+        monthlyCashFlow += ((rental.monthly_amount_krw || 0) / FX_RATE);
       });
 
       const totalValue = stockValue + cryptoValue;

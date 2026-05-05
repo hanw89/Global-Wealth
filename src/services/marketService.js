@@ -19,17 +19,21 @@ export const fetchExchangeRate = async () => {
   }
 };
 
-export const fetchCryptoPrices = async (ids = ['bitcoin', 'ethereum', 'solana']) => {
+export const fetchCryptoPrices = async (ids = []) => {
+  if (!ids || ids.length === 0) return {};
   try {
     const response = await fetch(
       `${COINGECKO_BASE}/simple/price?ids=${ids.join(',')}&vs_currencies=usd&include_24hr_change=true`
     );
-    if (response.status === 429) throw new Error('Crypto API rate limit exceeded');
+    if (response.status === 429) {
+      console.warn('Crypto API rate limit exceeded');
+      return {};
+    }
     if (!response.ok) throw new Error('Failed to fetch crypto prices');
     return await response.json();
   } catch (error) {
     console.error('Crypto Fetch Error:', error);
-    throw error;
+    return {};
   }
 };
 
@@ -38,6 +42,7 @@ export const fetchCryptoPrices = async (ids = ['bitcoin', 'ethereum', 'solana'])
  * In a production app, this would call a secure backend proxy.
  */
 export const fetchStockPrices = async (tickers = []) => {
+  if (!tickers || tickers.length === 0) return {};
   // Simulate network latency
   await new Promise(resolve => setTimeout(resolve, 500));
 

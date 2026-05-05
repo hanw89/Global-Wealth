@@ -26,9 +26,13 @@ const AddRentalForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-unified'] });
-      queryClient.invalidateQueries({ queryKey: ['marketData'] });
+      queryClient.refetchQueries({ queryKey: ['portfolio-unified'] });
       reset();
       alert('Rental income stream registered.');
+    },
+    onError: (error) => {
+      console.error('Rental Sync Error:', error);
+      alert(`Failed to sync rental: ${error.message}`);
     },
   });
 

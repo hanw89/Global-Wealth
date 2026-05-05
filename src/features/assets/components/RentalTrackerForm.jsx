@@ -1,16 +1,45 @@
 import React, { useState, useMemo } from 'react';
-import { Calculator, Save, Percent, Receipt, Wallet, TrendingUp } from 'lucide-react';
+import { Calculator, Save, Percent, Receipt, Wallet, TrendingUp, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { useAppContext } from '../../../context/AppContext.jsx';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../../../lib/supabaseClient';
 
 const RentalTrackerForm = () => {
   const { exchangeRate, privacyMode } = useAppContext();
+  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     propertyName: '',
     monthlyRent: '',
     managementFee: '',
     taxRate: 0, 
+  });
+
+  const mutation = useMutation({
+    mutationFn: async (data) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('rental_income')
+        .upsert({
+          user_id: user.id,
+          property_name: data.propertyName,
+          monthly_amount_krw: parseFloat(data.monthlyRent),
+          next_payment_date: new Date().toISOString().split('T')[0],
+        }, { onConflict: 'user_id,property_name' });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['portfolio-unified'] });
+      queryClient.refetchQueries({ queryKey: ['portfolio-unified'] });
+      alert('Rental record synchronized with global cash flow.');
+    },
+    onError: (error) => {
+      alert(`Failed to sync rental: ${error.message}`);
+    }
   });
 
   const calculations = useMemo(() => {
@@ -47,8 +76,11 @@ const RentalTrackerForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Saving Rental Data:', { ...formData, ...calculations });
-    alert('Rental record synchronized with global cash flow.');
+    if (!formData.propertyName || !formData.monthlyRent) {
+      alert('Please enter property name and rent.');
+      return;
+    }
+    mutation.mutate(formData);
   };
 
   const formatVal = (val, cur = 'USD') => formatCurrency(val, cur, { privacyMode });
@@ -136,9 +168,10 @@ const RentalTrackerForm = () => {
 
           <button
             type="submit"
-            className="w-full py-4 rounded-2xl bg-white text-black font-black text-sm hover:bg-emerald-400 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2"
+            disabled={mutation.isPending}
+            className="w-full py-4 rounded-2xl bg-white text-black font-black text-sm hover:bg-emerald-400 transition-all active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.1)] flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Save size={18} />
+            {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             Commit to Ledger
           </button>
         </form>

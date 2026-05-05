@@ -27,9 +27,13 @@ const AddCryptoForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-unified'] });
-      queryClient.invalidateQueries({ queryKey: ['marketData'] });
+      queryClient.refetchQueries({ queryKey: ['portfolio-unified'] });
       reset();
       alert('Crypto ledger updated.');
+    },
+    onError: (error) => {
+      console.error('Crypto Sync Error:', error);
+      alert(`Failed to sync crypto: ${error.message}`);
     },
   });
 

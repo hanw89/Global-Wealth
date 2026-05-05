@@ -27,9 +27,13 @@ const AddStockForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-unified'] });
-      queryClient.invalidateQueries({ queryKey: ['marketData'] });
+      queryClient.refetchQueries({ queryKey: ['portfolio-unified'] });
       reset();
       alert('Stock portfolio synchronized.');
+    },
+    onError: (error) => {
+      console.error('Stock Sync Error:', error);
+      alert(`Failed to sync stock: ${error.message}`);
     },
   });
 

@@ -5,11 +5,16 @@ import { usePortfolio } from '../../../hooks/usePortfolio.js';
 
 const KoreanAssetList = () => {
   const { currency, convertAmount } = useAppContext();
-  const { data: portfolio, isLoading } = usePortfolio();
+  const { data: portfolio, isLoading, error } = usePortfolio();
 
   const rentals = portfolio?.dbRentals || [];
 
-  if (isLoading) return <div className="p-8 text-center text-slate-500">Loading rentals...</div>;
+  if (isLoading) return <div className="p-8 text-center text-slate-500 animate-pulse">Loading rental assets...</div>;
+  if (error) return (
+    <div className="p-8 text-center rounded-xl border border-rose-500/20 bg-rose-500/5 text-rose-500 text-xs font-bold">
+      Failed to sync rentals: {error.message}
+    </div>
+  );
 
   return (
     <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
