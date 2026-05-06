@@ -11,7 +11,8 @@ import {
   BarChart3,
   CreditCard,
   RefreshCw,
-  Clock
+  Clock,
+  Globe
 } from 'lucide-react';
 import { usePortfolio } from '../../hooks/usePortfolio.js';
 import { usePriceTracker } from '../../hooks/usePriceTracker.js';
@@ -71,9 +72,9 @@ const Dashboard = () => {
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               <Globe size={10} />
               <span>USD/KRW: {exchangeRate.toFixed(2)}</span>
-              {rateLastUpdated && (
+              {rateLastUpdated ? (
                 <span className="opacity-60 font-medium">Sync: {new Date(rateLastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-              )}
+              ) : null}
             </div>
 
             {lastUpdated && (
