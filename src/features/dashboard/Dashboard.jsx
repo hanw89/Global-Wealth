@@ -44,6 +44,7 @@ const Dashboard = () => {
   // Calculate values based on live data
   const totalNetWorth = portfolio?.totalValue || 0;
   const totalRentUsd = portfolio?.monthlyCashFlow || 0;
+  const exchangeRateUsed = portfolio?.exchangeRateUsed || exchangeRate;
 
   // Fintech Feature: Tax Projections (15% Capital Gains)
   const estimatedCapitalGainsTax = totalNetWorth * 0.15;
