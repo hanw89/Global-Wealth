@@ -161,7 +161,7 @@ const MarketWatchTable = () => {
           </tbody>
         </table>
         
-        {dataUpdatedAt && (
+        {dataUpdatedAt ? (
           <div className="px-6 py-3 border-t border-white/[0.05] bg-white/[0.01] flex justify-between items-center">
             <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Global Portfolio Summary</span>
             <span className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5">
@@ -169,7 +169,7 @@ const MarketWatchTable = () => {
               Sync: {new Date(dataUpdatedAt).toLocaleTimeString()}
             </span>
           </div>
-        )}
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
