@@ -83,21 +83,3 @@ const AddRentalForm = () => {
 };
 
 export default AddRentalForm;
-         </div>
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20"
-        >
-          {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-          <span>Sync Rental Income</span>
-        </button>
-      </form>
-    </div>
-  );
-};
-
-export default AddRentalForm;

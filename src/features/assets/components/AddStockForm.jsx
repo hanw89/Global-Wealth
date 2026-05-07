@@ -69,27 +69,24 @@ const AddStockForm = () => {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20"
-        >
-          {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-          <span>Sync Stock Holding</span>
-        </button>
-      </form>
-    </div>
-  );
-};
+        <div>
+          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1">Purchase Price (USD)</label>
+          <input
+            {...register('purchasePrice', { required: true })}
+            type="number"
+            step="any"
+            placeholder="0.00"
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+          />
+        </div>
 
-export default AddStockForm;
-/label>
-            <input
-              {...register('purchaseDate', { required: true })}
-              type="date"
-              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-            />
-          </div>
+        <div>
+          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1">Purchase Date</label>
+          <input
+            {...register('purchaseDate', { required: true })}
+            type="date"
+            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+          />
         </div>
 
         <button
