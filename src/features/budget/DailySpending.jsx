@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext.js';
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import ExpenseLog from './components/ExpenseLog.jsx';
@@ -13,6 +13,8 @@ const MoneyManagement = () => {
   const [activeTab, setActiveTab] = useState('Expense'); // 'Income' or 'Expense'
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [editingId, setEditingId] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   // Default Categories Configuration
   const DEFAULT_EXPENSES = [
@@ -59,11 +61,30 @@ const MoneyManagement = () => {
   }, [transactions]);
 
   const activeCategories = activeTab === 'Expense' ? expenseCategories : incomeCategories;
-  const setActiveCategories = activeTab === 'Expense' ? setExpenseCategories : setIncomeCategories;
 
-  const totalExpenseUsd = expenseCategories.reduce((acc, curr) => acc + curr.amountUsd, 0);
-  const totalIncomeUsd = incomeCategories.reduce((acc, curr) => acc + curr.amountUsd, 0);
-  const currentTotalUsd = activeTab === 'Expense' ? totalExpenseUsd : totalIncomeUsd;
+  // Monthly Filter Logic
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      const d = new Date(t.date);
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+  }, [transactions, selectedMonth, selectedYear]);
+
+  const monthlyCategoryTotals = useMemo(() => {
+    const totals = {};
+    filteredTransactions.forEach(t => {
+      const cat = t.category.toString().trim();
+      if (!totals[cat]) totals[cat] = 0;
+      totals[cat] += t.amountUsd;
+    });
+    return totals;
+  }, [filteredTransactions]);
+
+  const currentTotalUsd = useMemo(() => {
+    return filteredTransactions
+      .filter(t => t.type === activeTab)
+      .reduce((acc, curr) => acc + curr.amountUsd, 0);
+  }, [filteredTransactions, activeTab]);
 
   const displayFormat = (amountUsd) => {
     if (isPrivacyMode) return currency === 'USD' ? '$X,XXX.XX' : '₩X,XXX,XXX';
@@ -123,58 +144,33 @@ const MoneyManagement = () => {
           return;
         }
 
-        console.log('Imported Data Sample:', data[0]);
-
-        const newExpenses = [...expenseCategories];
-        const newIncome = [...incomeCategories];
+        // Keep current categories but reset their all-time totals if we want to sync
+        // Actually, with the new filtered view, we should keep the full history in transactions.
+        // We will just replace the transactions list with the imported one.
         const newTransactions = [];
         let importCount = 0;
 
         data.forEach(row => {
-          // Precise mapping based on user's schema
-          const typeRaw = row['Income/Expense'] || row['Type'] || row['type'] || 'Expense';
-          const category = row['Category'] || row['category'];
-          const subCategory = row['Subcategory'] || row['subcategory'];
+          const typeRaw = (row['Income/Expense'] || row['Type'] || row['type'] || '').toString().toLowerCase();
+          const category = (row['Category'] || row['category'] || '').toString().trim();
           const amount = parseFloat(row['USD'] || row['Amount (USD)'] || row['Amount'] || 0);
-          const dateRaw = row['Date'] || row['date'] || new Date().toISOString().split('T')[0];
+          const dateRaw = row['Date'] || row['date'] || new Date();
           const description = row['Note'] || row['note'] || row['Accounts'] || row['accounts'] || category;
           
-          if (category) {
-            // Normalize names for matching
-            const normCategory = category.toString().trim().toLowerCase();
-            const typeRaw = row['Income/Expense'] || row['Type'] || row['type'] || 'Expense';
-            const isIncome = typeRaw.toString().toLowerCase().includes('income');
+          if (category && !isNaN(amount)) {
+            const isIncome = typeRaw.includes('income') || typeRaw === 'in' || typeRaw === '1';
             
-            const targetList = isIncome ? newIncome : newExpenses;
-            const setTargetList = isIncome ? setIncomeCategories : setExpenseCategories;
-            
-            // Find existing category matching normalized name
-            const idx = targetList.findIndex(c => c.category.trim().toLowerCase() === normCategory);
-            
-            if (idx > -1) {
-              targetList[idx].amountUsd += amount;
-              if (subCategory) {
-                if (!targetList[idx].subCategories) targetList[idx].subCategories = [];
-                if (!targetList[idx].subCategories.includes(subCategory.toString())) {
-                  targetList[idx].subCategories.push(subCategory.toString());
-                }
-              }
-            } else {
-              targetList.push({ 
-                id: Date.now() + Math.random(), 
-                category: category.toString().trim(), 
-                amountUsd: amount, 
-                icon: isIncome ? 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V15' : 'M12 6v6m0 0v6m0-6h6m-6 0H6', 
-                color: isIncome ? 'text-emerald-500' : 'text-slate-500',
-                subCategories: subCategory ? [subCategory.toString()] : []
-              });
+            let finalDate = dateRaw;
+            if (!(dateRaw instanceof Date)) {
+               finalDate = new Date(dateRaw);
             }
+            const dateStr = isNaN(finalDate.getTime()) ? new Date().toISOString().split('T')[0] : finalDate.toISOString().split('T')[0];
 
             newTransactions.push({
               id: Date.now() + Math.random(),
-              date: dateRaw.toString().includes('T') ? dateRaw.toString().split('T')[0] : dateRaw.toString(),
+              date: dateStr,
               description: description.toString(),
-              category: category.toString().trim(),
+              category: category,
               type: isIncome ? 'Income' : 'Expense',
               amountUsd: amount,
               note: row['Note'] || row['note'] || ''
@@ -184,10 +180,8 @@ const MoneyManagement = () => {
           }
         });
 
-        setExpenseCategories(newExpenses);
-        setIncomeCategories(newIncome);
-        setTransactions(prev => [...newTransactions, ...prev]);
-        alert(`Successfully imported ${importCount} budget entries and logs!`);
+        setTransactions(newTransactions);
+        alert(`Successfully imported ${importCount} budget entries! The dashboard is now updated to show data filtered by month.`);
       } catch (error) {
         console.error('Import Error:', error);
         alert('Failed to parse the Excel file. Please ensure it is a valid budget spreadsheet.');
@@ -241,6 +235,20 @@ const MoneyManagement = () => {
     cat.category,
     ...(cat.subCategories || []).map(sub => `${cat.category}: ${sub}`)
   ]);
+
+  const monthlyExpenses = useMemo(() => {
+    return expenseCategories.map(c => ({
+      ...c,
+      amountUsd: monthlyCategoryTotals[c.category] || 0
+    }));
+  }, [expenseCategories, monthlyCategoryTotals]);
+
+  const monthlyIncome = useMemo(() => {
+    return incomeCategories.map(c => ({
+      ...c,
+      amountUsd: monthlyCategoryTotals[c.category] || 0
+    }));
+  }, [incomeCategories, monthlyCategoryTotals]);
 
   return (
     <div className="max-w-6xl mx-auto font-sans">
@@ -342,7 +350,7 @@ const MoneyManagement = () => {
           </div>
 
           <div className={`${activeTab === 'Expense' ? 'bg-rose-500/10' : 'bg-emerald-500/10'} backdrop-blur-xl p-6 rounded-3xl text-white shadow-xl overflow-hidden relative border border-white/5`}>
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total {activeTab} ({currency})</p>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total {activeTab} (Monthly)</p>
             <p className={`text-2xl font-black transition-all ${isPrivacyMode ? 'blur-md' : ''}`}>
               {displayFormat(currentTotalUsd)}
             </p>
@@ -364,64 +372,87 @@ const MoneyManagement = () => {
                   Live
                 </div>
               </div>
-              <span className="text-xs font-mono text-slate-500 uppercase">May 2026</span>
+              
+              <div className="flex items-center gap-2">
+                <select 
+                  value={selectedMonth} 
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-[10px] font-black text-white uppercase focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => (
+                    <option key={m} value={i} className="bg-slate-900">{m}</option>
+                  ))}
+                </select>
+                <select 
+                  value={selectedYear} 
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-[10px] font-black text-white uppercase focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                >
+                  {[2023, 2024, 2025, 2026].map(y => (
+                    <option key={y} value={y} className="bg-slate-900">{y}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeCategories
                 .filter(item => selectedCategory === 'All' || item.category === selectedCategory)
-                .map((item) => (
-                <div key={item.id} className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group relative shadow-inner">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`p-2 rounded-xl bg-white/5 ${item.color}`}>
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
-                      </svg>
-                    </div>
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => addSubCategory(item.id)}
-                        className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter hover:text-indigo-300 transition-colors"
-                      >
-                        + Sub
-                      </button>
-                      <button 
-                        onClick={() => editingId === item.id ? handleSave() : setEditingId(item.id)}
-                        className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter hover:text-slate-300 transition-colors"
-                      >
-                        {editingId === item.id ? 'Save' : 'Edit'}
-                      </button>
-                    </div>
-                  </div>
-                  <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">{item.category}</h4>
-                  
-                  {editingId === item.id ? (
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-black text-white">{currency === 'USD' ? '$' : '₩'}</span>
-                      <input
-                        type="number"
-                        value={currency === 'KRW' ? (item.amountUsd * exchangeRate).toFixed(0) : item.amountUsd}
-                        onChange={(e) => handleAmountChange(item.id, e.target.value)}
-                        className="text-2xl font-black text-white bg-black/40 border border-white/10 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-white/20"
-                        autoFocus
-                        onBlur={handleSave}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                      />
-                    </div>
-                  ) : (
-                    <p className={`text-2xl font-black text-white transition-all ${isPrivacyMode ? 'blur-sm select-none' : ''}`}>
-                      {displayFormat(item.amountUsd)}
-                    </p>
-                  )}
+                .map((item) => {
+                  const monthlyAmount = monthlyCategoryTotals[item.category] || 0;
+                  return (
+                    <div key={item.id} className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group relative shadow-inner">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`p-2 rounded-xl bg-white/5 ${item.color}`}>
+                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
+                          </svg>
+                        </div>
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => addSubCategory(item.id)}
+                            className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter hover:text-indigo-300 transition-colors"
+                          >
+                            + Sub
+                          </button>
+                          <button 
+                            onClick={() => editingId === item.id ? handleSave() : setEditingId(item.id)}
+                            className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter hover:text-slate-300 transition-colors"
+                          >
+                            {editingId === item.id ? 'Save' : 'Edit'}
+                          </button>
+                        </div>
+                      </div>
+                      <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">{item.category}</h4>
+                      
+                      {editingId === item.id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl font-black text-white">{currency === 'USD' ? '$' : '₩'}</span>
+                          <input
+                            type="number"
+                            value={currency === 'KRW' ? (monthlyAmount * exchangeRate).toFixed(0) : monthlyAmount}
+                            onChange={(e) => handleAmountChange(item.id, e.target.value)}
+                            className="text-2xl font-black text-white bg-black/40 border border-white/10 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-white/20"
+                            autoFocus
+                            onBlur={handleSave}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                          />
+                        </div>
+                      ) : (
+                        <p className={`text-2xl font-black text-white transition-all ${isPrivacyMode ? 'blur-sm select-none' : ''}`}>
+                          {displayFormat(monthlyAmount)}
+                        </p>
+                      )}
 
-                  <div className="mt-4 w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-1000 ${item.color.replace('text', 'bg')}`}
-                      style={{ width: `${currentTotalUsd > 0 ? (item.amountUsd / currentTotalUsd * 100).toFixed(0) : 0}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
+                      <div className="mt-4 w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-1000 ${item.color.replace('text', 'bg')}`}
+                          style={{ width: `${currentTotalUsd > 0 ? (monthlyAmount / currentTotalUsd * 100).toFixed(0) : 0}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
 
@@ -449,7 +480,7 @@ const MoneyManagement = () => {
           )}
 
           {/* Visual Analysis */}
-          <BudgetPieChart expenseCategories={expenseCategories} incomeCategories={incomeCategories} />
+          <BudgetPieChart expenseCategories={monthlyExpenses} incomeCategories={monthlyIncome} />
 
           {/* Transaction Log */}
           <div className="mt-12">
