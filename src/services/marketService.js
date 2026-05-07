@@ -1,82 +1,81 @@
-const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
+const MASSIVE_API_KEY = 'fV5rCiX38dgg6NvC5HSA7OT72upRLBH7';
+const BASE_URL = 'https://api.polygon.io'; // Massive uses Polygon's architecture
 
 /**
- * Senior Fintech Service: Market Data
- * Refactored for Browser compatibility (Vite/React).
- * Note: Pure client-side stock APIs are limited by CORS. 
- * We use a simulation with stochastic drift for Stock data in this demo.
+ * Massive Unified Market Service
+ * Institutional grade real-time data for Stocks, Crypto, and Forex.
  */
+
+const fetchWithAuth = async (url) => {
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${MASSIVE_API_KEY}`
+    }
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+};
 
 export const fetchExchangeRate = async () => {
   try {
-    const response = await fetch('https://open.er-api.com/v6/latest/USD');
-    if (!response.ok) throw new Error('Failed to fetch exchange rates');
-    const data = await response.json();
-    return data.rates.KRW || 1350;
+    // Massive Forex Snapshot (USD/KRW)
+    const data = await fetchWithAuth(`${BASE_URL}/v2/aggs/ticker/C:USDKRW/prev?adjusted=true`);
+    const rate = data.results?.[0]?.c;
+    return rate || 1450; // Fallback if data missing
   } catch (error) {
-    console.error('Exchange Rate Fetch Error:', error);
-    return 1350; 
+    console.error('Massive Forex Error:', error);
+    return 1450; 
   }
 };
 
-export const fetchCryptoPrices = async (ids = []) => {
-  if (!ids || ids.length === 0) return {};
-  try {
-    const response = await fetch(
-      `${COINGECKO_BASE}/simple/price?ids=${ids.join(',')}&vs_currencies=usd&include_24hr_change=true`
-    );
-    if (response.status === 429) {
-      console.warn('Crypto API rate limit exceeded');
-      return {};
+export const fetchCryptoPrices = async (tickers = []) => {
+  if (!tickers || tickers.length === 0) return {};
+  
+  const cryptoData = {};
+  
+  // Massive handles crypto via X:SYMBOLUSD format
+  await Promise.all(tickers.map(async (ticker) => {
+    try {
+      // Map common names to symbols if necessary (or assume tickers are passed)
+      const symbol = ticker.toUpperCase().replace('BITCOIN', 'BTC').replace('ETHEREUM', 'ETH');
+      const data = await fetchWithAuth(`${BASE_URL}/v2/aggs/ticker/X:${symbol}USD/prev?adjusted=true`);
+      
+      const result = data.results?.[0];
+      if (result) {
+        cryptoData[ticker.toLowerCase()] = {
+          usd: result.c,
+          usd_24h_change: ((result.c - result.o) / result.o) * 100
+        };
+      }
+    } catch (error) {
+      console.error(`Massive Crypto Error (${ticker}):`, error);
     }
-    if (!response.ok) throw new Error('Failed to fetch crypto prices');
-    return await response.json();
-  } catch (error) {
-    console.error('Crypto Fetch Error:', error);
-    return {};
-  }
+  }));
+
+  return cryptoData;
 };
 
-/**
- * Live Stock Fetcher (using Yahoo Finance via AllOrigins Proxy)
- * This bypasses CORS and provides real-time data as requested.
- */
 export const fetchStockPrices = async (tickers = []) => {
   if (!tickers || tickers.length === 0) return {};
   
   const stockData = {};
   
-  // Parallel fetch for efficiency
   await Promise.all(tickers.map(async (ticker) => {
     try {
-      // Use AllOrigins as a reliable CORS proxy
-      const encodedUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d`);
-      const response = await fetch(`https://api.allorigins.win/get?url=${encodedUrl}`);
+      const data = await fetchWithAuth(`${BASE_URL}/v2/aggs/ticker/${ticker.toUpperCase()}/prev?adjusted=true`);
       
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
-      const data = await response.json();
-      if (!data.contents) throw new Error('No contents found in proxy response');
-      
-      const contents = JSON.parse(data.contents);
-      const result = contents.chart.result?.[0];
-      
+      const result = data.results?.[0];
       if (result) {
-        const price = result.meta.regularMarketPrice;
-        const prevClose = result.meta.chartPreviousClose;
-        const change = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
-        
-        stockData[ticker] = {
-          price,
-          change
+        stockData[ticker.toUpperCase()] = {
+          price: result.c,
+          change: ((result.c - result.o) / result.o) * 100
         };
-      } else {
-        console.warn(`No data found for ticker: ${ticker}`);
-        stockData[ticker] = { price: 0, change: 0 };
       }
     } catch (error) {
-      console.error(`Error fetching price for ${ticker}:`, error);
-      stockData[ticker] = { price: 0, change: 0 };
+      console.error(`Massive Stock Error (${ticker}):`, error);
     }
   }));
 
@@ -84,25 +83,21 @@ export const fetchStockPrices = async (tickers = []) => {
 };
 
 /**
- * Fetches historical exchange rates (Simulated for Browser stability)
+ * Fetches historical forex data using Massive Aggregates
  */
 export const fetchHistoricalForex = async () => {
-  const mockData = [];
-  const baseRate = 1320;
-  const now = new Date();
-  
-  for (let i = 0; i < 365; i++) {
-    const date = new Date(now);
-    date.setDate(date.getDate() - (365 - i));
+  try {
+    const to = new Date().toISOString().split('T')[0];
+    const from = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Last 90 days
     
-    // Create a realistic-looking random walk
-    const drift = Math.sin(i / 20) * 40;
-    const noise = (Math.random() - 0.5) * 10;
+    const data = await fetchWithAuth(`${BASE_URL}/v2/aggs/ticker/C:USDKRW/range/1/day/${from}/${to}?adjusted=true&sort=asc`);
     
-    mockData.push({
-      date: date.toISOString().split('T')[0],
-      close: baseRate + drift + noise
-    });
+    return (data.results || []).map(r => ({
+      date: new Date(r.t).toISOString().split('T')[0],
+      close: r.c
+    }));
+  } catch (error) {
+    console.error('Massive Historical Forex Error:', error);
+    return [];
   }
-  return mockData;
 };
