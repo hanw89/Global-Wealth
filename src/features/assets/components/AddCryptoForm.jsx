@@ -20,7 +20,8 @@ const AddCryptoForm = () => {
           type: 'Crypto',
           ticker: data.symbol.toUpperCase(),
           quantity: parseFloat(data.quantity),
-          avg_buy_price: 0,
+          avg_buy_price: parseFloat(data.purchasePrice),
+          created_at: data.purchaseDate ? new Date(data.purchaseDate).toISOString() : new Date().toISOString(),
         });
 
       if (error) throw error;
@@ -63,6 +64,29 @@ const AddCryptoForm = () => {
               type="number"
               step="any"
               placeholder="0.00"
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
+            />
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          disabled={mutation.isPending}
+          className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-orange-500/20"
+        >
+          {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+          <span>Sync Crypto Ledger</span>
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default AddCryptoForm;
+Date</label>
+            <input
+              {...register('purchaseDate', { required: true })}
+              type="date"
               className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
             />
           </div>
