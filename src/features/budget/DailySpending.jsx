@@ -39,6 +39,11 @@ const MoneyManagement = () => {
     return saved ? JSON.parse(saved) : DEFAULT_INCOME;
   });
 
+  const [transactions, setTransactions] = useState(() => {
+    const saved = localStorage.getItem('budget-transactions');
+    return saved ? JSON.parse(saved) : [];
+  });
+
   // Persist to LocalStorage
   useEffect(() => {
     localStorage.setItem('budget-expenses', JSON.stringify(expenseCategories));
@@ -47,6 +52,10 @@ const MoneyManagement = () => {
   useEffect(() => {
     localStorage.setItem('budget-income', JSON.stringify(incomeCategories));
   }, [incomeCategories]);
+
+  useEffect(() => {
+    localStorage.setItem('budget-transactions', JSON.stringify(transactions));
+  }, [transactions]);
 
   const activeCategories = activeTab === 'Expense' ? expenseCategories : incomeCategories;
   const setActiveCategories = activeTab === 'Expense' ? setExpenseCategories : setIncomeCategories;
@@ -77,6 +86,7 @@ const MoneyManagement = () => {
     if (window.confirm('Are you sure you want to reset all budget data? This will clear all numbers.')) {
       setExpenseCategories(DEFAULT_EXPENSES);
       setIncomeCategories(DEFAULT_INCOME);
+      setTransactions([]);
       setSelectedCategory('All');
     }
   };
@@ -102,7 +112,7 @@ const MoneyManagement = () => {
     reader.onload = (evt) => {
       try {
         const bstr = evt.target.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wb = XLSX.read(bstr, { type: 'binary', cellDates: true });
         const wsname = wb.SheetNames[0];
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json(ws);
@@ -116,6 +126,7 @@ const MoneyManagement = () => {
 
         const newExpenses = [...expenseCategories];
         const newIncome = [...incomeCategories];
+        const newTransactions = [];
         let importCount = 0;
 
         data.forEach(row => {
@@ -124,6 +135,8 @@ const MoneyManagement = () => {
           const category = row['Category'] || row['category'];
           const subCategory = row['Subcategory'] || row['subcategory'];
           const amount = parseFloat(row['USD'] || row['Amount (USD)'] || row['Amount'] || 0);
+          const dateRaw = row['Date'] || row['date'] || new Date().toISOString().split('T')[0];
+          const description = row['Note'] || row['note'] || row['Accounts'] || row['accounts'] || category;
           
           if (category) {
             // Determine if it's Income or Expense based on the 'Income/Expense' column
@@ -154,19 +167,46 @@ const MoneyManagement = () => {
                 subCategories: subCategory ? [subCategory.toString()] : []
               });
             }
+
+            // Create individual transaction log
+            newTransactions.push({
+              id: Date.now() + Math.random(),
+              date: dateRaw.toString().includes('T') ? dateRaw.toString().split('T')[0] : dateRaw.toString(),
+              description: description.toString(),
+              category: category.toString(),
+              type: isIncome ? 'Income' : 'Expense',
+              amountUsd: amount
+            });
+
             importCount++;
           }
         });
 
         setExpenseCategories(newExpenses);
         setIncomeCategories(newIncome);
-        alert(`Successfully imported ${importCount} budget entries!`);
+        setTransactions(prev => [...newTransactions, ...prev]);
+        alert(`Successfully imported ${importCount} budget entries and logs!`);
       } catch (error) {
         console.error('Import Error:', error);
         alert('Failed to parse the Excel file. Please ensure it is a valid budget spreadsheet.');
       }
     };
     reader.readAsBinaryString(file);
+  };
+
+  const handleAddTransaction = (transaction) => {
+    setTransactions(prev => [transaction, ...prev]);
+    
+    // Also update the category totals
+    const targetList = transaction.type === 'Income' ? incomeCategories : expenseCategories;
+    const setTargetList = transaction.type === 'Income' ? setIncomeCategories : setExpenseCategories;
+    
+    const idx = targetList.findIndex(c => c.category === transaction.category);
+    if (idx > -1) {
+      const newList = [...targetList];
+      newList[idx].amountUsd += transaction.amountUsd;
+      setTargetList(newList);
+    }
   };
 
   const addCategory = () => {
@@ -403,7 +443,13 @@ const MoneyManagement = () => {
           {/* Transaction Log */}
           <div className="mt-12">
             <h2 className="text-xl font-bold text-white mb-6">Transaction Log</h2>
-            <ExpenseLog key={activeTab} activeTab={activeTab} categories={allCategoryNames} />
+            <ExpenseLog 
+              key={activeTab} 
+              activeTab={activeTab} 
+              categories={allCategoryNames} 
+              transactions={transactions}
+              onAddTransaction={handleAddTransaction}
+            />
           </div>
         </main>
       </div>
