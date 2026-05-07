@@ -152,14 +152,47 @@ const MoneyManagement = () => {
 
         data.forEach(row => {
           const typeRaw = (row['Income/Expense'] || row['Type'] || row['type'] || '').toString().toLowerCase();
-          const category = (row['Category'] || row['category'] || '').toString().trim();
+          const categoryRaw = (row['Category'] || row['category'] || '').toString().trim();
+          const subCategory = row['Subcategory'] || row['subcategory'];
           const amount = parseFloat(row['USD'] || row['Amount (USD)'] || row['Amount'] || 0);
-          const dateRaw = row['Date'] || row['date'] || new Date();
-          const description = row['Note'] || row['note'] || row['Accounts'] || row['accounts'] || category;
+          const dateRaw = row['Period'] || row['Date'] || row['date'] || new Date();
+          const description = row['Note'] || row['note'] || row['Accounts'] || row['accounts'] || categoryRaw;
           
-          if (category && !isNaN(amount)) {
+          if (categoryRaw && !isNaN(amount)) {
+            // Robust Income/Expense detection (handles 'Exp.' and 'Income')
             const isIncome = typeRaw.includes('income') || typeRaw === 'in' || typeRaw === '1';
             
+            // Clean category for matching (strip emojis like 🍜 or 💰)
+            const categoryClean = categoryRaw.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/[\u{2600}-\u{27BF}]/gu, '').trim();
+            
+            const targetList = isIncome ? newIncome : newExpenses;
+            const normCategory = categoryClean.toLowerCase();
+            
+            // Match against existing categories (e.g. "🍜 Food" matches "Food")
+            const idx = targetList.findIndex(c => 
+              c.category.toLowerCase() === normCategory || 
+              normCategory.includes(c.category.toLowerCase()) ||
+              c.category.toLowerCase().includes(normCategory)
+            );
+            
+            let finalCategoryName = categoryRaw;
+            
+            if (idx > -1) {
+              finalCategoryName = targetList[idx].category; // Map to the website's clean name
+              // Internal total is not used for monthly view anymore, but we update for consistency
+              targetList[idx].amountUsd += amount;
+            } else {
+              // Create new category if it doesn't exist
+              targetList.push({ 
+                id: Date.now() + Math.random(), 
+                category: categoryRaw, 
+                amountUsd: amount, 
+                icon: isIncome ? 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V15' : 'M12 6v6m0 0v6m0-6h6m-6 0H6', 
+                color: isIncome ? 'text-emerald-500' : 'text-slate-500',
+                subCategories: subCategory ? [subCategory.toString()] : []
+              });
+            }
+
             let finalDate = dateRaw;
             if (!(dateRaw instanceof Date)) {
                finalDate = new Date(dateRaw);
@@ -170,7 +203,7 @@ const MoneyManagement = () => {
               id: Date.now() + Math.random(),
               date: dateStr,
               description: description.toString(),
-              category: category,
+              category: finalCategoryName,
               type: isIncome ? 'Income' : 'Expense',
               amountUsd: amount,
               note: row['Note'] || row['note'] || ''
