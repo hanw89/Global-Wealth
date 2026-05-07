@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext.js';
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import ExpenseLog from './components/ExpenseLog.jsx';
-import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal, Download, Upload, RotateCcw, FileSpreadsheet } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const MoneyManagement = () => {
   const { currency, exchangeRate, convertAmount, theme } = useAppContext();
@@ -10,23 +11,41 @@ const MoneyManagement = () => {
   const [activeTab, setActiveTab] = useState('Expense'); // 'Income' or 'Expense'
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [editingId, setEditingId] = useState(null);
-  
-  const [expenseCategories, setExpenseCategories] = useState([
-    { id: 1, category: 'Food', amountUsd: 450.00, icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z', color: 'text-emerald-600', bg: 'bg-emerald-50', darkBg: 'dark:bg-emerald-900/20', subCategories: ['Groceries', 'Eating out'] },
-    { id: 2, category: 'Living Expense', amountUsd: 1200.00, icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', color: 'text-blue-600', bg: 'bg-blue-50', darkBg: 'dark:bg-blue-900/20', subCategories: ['Rent', 'Utilities', 'Maintenance'] },
-    { id: 3, category: 'Transport', amountUsd: 200.00, icon: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z', color: 'text-indigo-600', bg: 'bg-indigo-50', darkBg: 'dark:bg-indigo-900/20', subCategories: ['Public Transport', 'Fuel', 'Parking'] },
-    { id: 4, category: 'Travel', amountUsd: 0, icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.065M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M9 21h6', color: 'text-cyan-600', bg: 'bg-cyan-50', darkBg: 'dark:bg-cyan-900/20', subCategories: ['Flights', 'Hotels', 'Sightseeing'] },
-    { id: 5, category: 'Gift', amountUsd: 50.00, icon: 'M20 12V8H4v4m16 0a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2m16 0h-16', color: 'text-rose-600', bg: 'bg-rose-50', darkBg: 'dark:bg-rose-900/20', subCategories: ['Family', 'Friends', 'Charity'] },
-    { id: 6, category: 'Education', amountUsd: 100.00, icon: 'M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222', color: 'text-purple-600', bg: 'bg-purple-50', darkBg: 'dark:bg-purple-900/20', subCategories: ['Tuition', 'Books', 'Courses'] },
-    { id: 7, category: 'Medical', amountUsd: 80.00, icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', color: 'text-red-600', bg: 'bg-red-50', darkBg: 'dark:bg-red-900/20', subCategories: ['Doctor', 'Pharmacy', 'Health Insurance'] },
-    { id: 8, category: 'Subscription', amountUsd: 120.00, icon: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z', color: 'text-orange-600', bg: 'bg-orange-50', darkBg: 'dark:bg-orange-900/20', subCategories: ['Streaming', 'Software', 'Gym'] },
-  ]);
 
-  const [incomeCategories, setIncomeCategories] = useState([
-    { id: 101, category: 'Salary', amountUsd: 5000.00, icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V15', color: 'text-green-600', bg: 'bg-green-50', darkBg: 'dark:bg-green-900/20', subCategories: ['Base Salary', 'Bonus'] },
-    { id: 102, category: 'Freelance', amountUsd: 800.00, icon: 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', color: 'text-teal-600', bg: 'bg-teal-50', darkBg: 'dark:bg-teal-900/20', subCategories: ['Web Dev', 'Consulting'] },
-    { id: 103, category: 'Investments', amountUsd: 350.00, icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', color: 'text-blue-600', bg: 'bg-blue-50', darkBg: 'dark:bg-blue-900/20', subCategories: ['Dividends', 'Interest'] },
-  ]);
+  // Default Categories Configuration
+  const DEFAULT_EXPENSES = [
+    { id: 1, category: 'Food', amountUsd: 0, icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z', color: 'text-emerald-600', subCategories: ['Groceries', 'Eating out'] },
+    { id: 2, category: 'Living Expense', amountUsd: 0, icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', color: 'text-blue-600', subCategories: ['Rent', 'Utilities', 'Maintenance'] },
+    { id: 3, category: 'Transport', amountUsd: 0, icon: 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 100 2 1 1 0 000-2zm7 0a1 1 0 100 2 1 1 0 000-2z', color: 'text-indigo-600', subCategories: ['Public Transport', 'Fuel', 'Parking'] },
+    { id: 4, category: 'Travel', amountUsd: 0, icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.065M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M9 21h6', color: 'text-cyan-600', subCategories: ['Flights', 'Hotels', 'Sightseeing'] },
+    { id: 5, category: 'Gift', amountUsd: 0, icon: 'M20 12V8H4v4m16 0a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4a2 2 0 012-2m16 0h-16', color: 'text-rose-600', subCategories: ['Family', 'Friends', 'Charity'] },
+    { id: 6, category: 'Education', amountUsd: 0, icon: 'M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222', color: 'text-purple-600', subCategories: ['Tuition', 'Books', 'Courses'] },
+  ];
+
+  const DEFAULT_INCOME = [
+    { id: 101, category: 'Salary', amountUsd: 0, icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V15', color: 'text-green-600', subCategories: ['Base Salary', 'Bonus'] },
+    { id: 102, category: 'Investments', amountUsd: 0, icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6', color: 'text-blue-600', subCategories: ['Dividends', 'Interest'] },
+  ];
+
+  // Load from LocalStorage
+  const [expenseCategories, setExpenseCategories] = useState(() => {
+    const saved = localStorage.getItem('budget-expenses');
+    return saved ? JSON.parse(saved) : DEFAULT_EXPENSES;
+  });
+
+  const [incomeCategories, setIncomeCategories] = useState(() => {
+    const saved = localStorage.getItem('budget-income');
+    return saved ? JSON.parse(saved) : DEFAULT_INCOME;
+  });
+
+  // Persist to LocalStorage
+  useEffect(() => {
+    localStorage.setItem('budget-expenses', JSON.stringify(expenseCategories));
+  }, [expenseCategories]);
+
+  useEffect(() => {
+    localStorage.setItem('budget-income', JSON.stringify(incomeCategories));
+  }, [incomeCategories]);
 
   const activeCategories = activeTab === 'Expense' ? expenseCategories : incomeCategories;
   const setActiveCategories = activeTab === 'Expense' ? setExpenseCategories : setIncomeCategories;
@@ -53,6 +72,66 @@ const MoneyManagement = () => {
     setEditingId(null);
   };
 
+  const resetData = () => {
+    if (window.confirm('Are you sure you want to reset all budget data? This will clear all numbers.')) {
+      setExpenseCategories(DEFAULT_EXPENSES);
+      setIncomeCategories(DEFAULT_INCOME);
+      setSelectedCategory('All');
+    }
+  };
+
+  const exportData = () => {
+    const data = [
+      ['Type', 'Category', 'Amount (USD)', 'Amount (Selected Currency)', 'Currency Used'],
+      ...expenseCategories.map(c => ['Expense', c.category, c.amountUsd.toFixed(2), convertAmount(c.amountUsd, 'USD', currency).toFixed(0), currency]),
+      ...incomeCategories.map(c => ['Income', c.category, c.amountUsd.toFixed(2), convertAmount(c.amountUsd, 'USD', currency).toFixed(0), currency])
+    ];
+    
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Budget');
+    XLSX.writeFile(wb, `GlobalWealth_Budget_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const importData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const bstr = evt.target.result;
+      const wb = XLSX.read(bstr, { type: 'binary' });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws);
+
+      // Simple mapping logic: expect columns 'Type', 'Category', 'Amount (USD)'
+      const newExpenses = [...expenseCategories];
+      const newIncome = [...incomeCategories];
+
+      data.forEach(row => {
+        const type = row['Type'] || row['type'];
+        const category = row['Category'] || row['category'];
+        const amount = parseFloat(row['Amount (USD)'] || row['amount'] || 0);
+
+        if (type === 'Expense') {
+          const idx = newExpenses.findIndex(c => c.category === category);
+          if (idx > -1) newExpenses[idx].amountUsd = amount;
+          else newExpenses.push({ id: Date.now() + Math.random(), category, amountUsd: amount, icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6', color: 'text-slate-500' });
+        } else if (type === 'Income') {
+          const idx = newIncome.findIndex(c => c.category === category);
+          if (idx > -1) newIncome[idx].amountUsd = amount;
+          else newIncome.push({ id: Date.now() + Math.random(), category, amountUsd: amount, icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6', color: 'text-slate-500' });
+        }
+      });
+
+      setExpenseCategories(newExpenses);
+      setIncomeCategories(newIncome);
+      alert('Data imported successfully!');
+    };
+    reader.readAsBinaryString(file);
+  };
+
   const addCategory = () => {
     const name = prompt(`Enter new ${activeTab} category name:`);
     if (name) {
@@ -62,8 +141,6 @@ const MoneyManagement = () => {
         amountUsd: 0,
         icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6',
         color: 'text-slate-600',
-        bg: 'bg-slate-50',
-        darkBg: 'dark:bg-slate-900/20',
         subCategories: []
       };
       setActiveCategories([...activeCategories, newCat]);
@@ -95,12 +172,22 @@ const MoneyManagement = () => {
           <div className="bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 shadow-xl">
             <div className="flex items-center justify-between mb-6 px-2">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Management</h3>
-              <button 
-                onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                className={`p-1.5 rounded-lg transition-colors ${isPrivacyMode ? 'bg-white/10 text-white' : 'text-slate-500 hover:bg-white/5'}`}
-              >
-                <MoreHorizontal size={16} />
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={resetData}
+                  className="p-1.5 rounded-lg text-slate-500 hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
+                  title="Reset Data"
+                >
+                  <RotateCcw size={16} />
+                </button>
+                <button 
+                  onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+                  className={`p-1.5 rounded-lg transition-colors ${isPrivacyMode ? 'bg-white/10 text-white' : 'text-slate-500 hover:bg-white/5'}`}
+                  title="Privacy Mode"
+                >
+                  <MoreHorizontal size={16} />
+                </button>
+              </div>
             </div>
 
             <div className="flex p-1 bg-black/40 rounded-xl mb-6">
@@ -118,6 +205,22 @@ const MoneyManagement = () => {
                 <TrendingUp size={14} />
                 Income
               </button>
+            </div>
+
+            {/* Data Portability Tools */}
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              <button 
+                onClick={exportData}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group"
+              >
+                <Download size={16} className="text-indigo-400 mb-1 group-hover:-translate-y-0.5 transition-transform" />
+                <span className="text-[9px] font-black uppercase text-slate-500 group-hover:text-white">Export</span>
+              </button>
+              <label className="flex flex-col items-center justify-center p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group cursor-pointer">
+                <Upload size={16} className="text-emerald-400 mb-1 group-hover:-translate-y-0.5 transition-transform" />
+                <span className="text-[9px] font-black uppercase text-slate-500 group-hover:text-white">Import</span>
+                <input type="file" accept=".xlsx, .xls, .csv" className="hidden" onChange={importData} />
+              </label>
             </div>
             
             <nav className="space-y-1">
@@ -144,23 +247,6 @@ const MoneyManagement = () => {
                     </div>
                     <span className="flex-1 text-left">{item.category}</span>
                   </button>
-                  {selectedCategory === item.category && item.subCategories && (
-                    <div className="ml-9 mt-1 space-y-1">
-                      {item.subCategories.map(sub => (
-                        <div key={sub} className="px-3 py-1.5 text-xs text-slate-500 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
-                          {sub}
-                        </div>
-                      ))}
-                      <button 
-                        onClick={() => addSubCategory(item.id)}
-                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
-                      >
-                        <Plus size={12} />
-                        Add Sub
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
 
@@ -191,9 +277,14 @@ const MoneyManagement = () => {
         <main className="flex-1 space-y-6">
           <div className="bg-white/5 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">
-                {selectedCategory === 'All' ? `${activeTab} Overview` : `${selectedCategory} Breakdown`}
-              </h2>
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-white">
+                  {selectedCategory === 'All' ? `${activeTab} Overview` : `${selectedCategory} Breakdown`}
+                </h2>
+                <div className="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-widest">
+                  Live
+                </div>
+              </div>
               <span className="text-xs font-mono text-slate-500 uppercase">May 2026</span>
             </div>
 
@@ -244,43 +335,15 @@ const MoneyManagement = () => {
                     </p>
                   )}
 
-                  {item.subCategories && item.subCategories.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {item.subCategories.map(sub => (
-                        <span key={sub} className="px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                          {sub}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
                   <div className="mt-4 w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ${item.color.replace('text', 'bg')}`}
                       style={{ width: `${currentTotalUsd > 0 ? (item.amountUsd / currentTotalUsd * 100).toFixed(0) : 0}%` }}
                     ></div>
                   </div>
-                  <p className="mt-2 text-[10px] text-slate-500 font-medium">
-                    {currentTotalUsd > 0 ? (item.amountUsd / currentTotalUsd * 100).toFixed(1) : 0}% of total monthly {activeTab.toLowerCase()}
-                  </p>
                 </div>
               ))}
             </div>
-
-            {selectedCategory === 'All' && activeTab === 'Expense' && (
-              <div className="mt-8 pt-6 border-t border-white/10">
-                <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
-                  <span>Spending Progress</span>
-                  <span>{((totalExpenseUsd / 7500) * 100).toFixed(0)}% of Goal ({displayFormat(7500)})</span>
-                </div>
-                <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
-                  <div 
-                    className="bg-white h-full rounded-full transition-all duration-1000"
-                    style={{ width: `${Math.min((totalExpenseUsd / 7500) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Privacy Disclaimer */}
