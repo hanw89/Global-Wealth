@@ -119,40 +119,39 @@ const MoneyManagement = () => {
         let importCount = 0;
 
         data.forEach(row => {
-          // Robust column matching (case-insensitive and partial)
-          const findVal = (prefixes) => {
-            const key = Object.keys(row).find(k => 
-              prefixes.some(p => k.toLowerCase().includes(p.toLowerCase()))
-            );
-            return key ? row[key] : null;
-          };
-
-          const type = findVal(['Type', 'Group']) || 'Expense';
-          const category = findVal(['Category', 'Item', 'Name', 'Label']);
-          let amount = parseFloat(findVal(['Amount', 'Cost', 'Value', 'Price']) || 0);
+          // Precise mapping based on user's schema
+          const typeRaw = row['Income/Expense'] || row['Type'] || row['type'] || 'Expense';
+          const category = row['Category'] || row['category'];
+          const subCategory = row['Subcategory'] || row['subcategory'];
+          const amount = parseFloat(row['USD'] || row['Amount (USD)'] || row['Amount'] || 0);
           
-          // Determine if amount is in KRW or USD based on column name
-          const amountKey = Object.keys(row).find(k => k.toLowerCase().includes('amount') || k.toLowerCase().includes('cost'));
-          const isKrw = amountKey && amountKey.toLowerCase().includes('krw');
-
-          if (isKrw) {
-            amount = amount / exchangeRate;
-          }
-
           if (category) {
-            const targetList = type.toLowerCase().includes('income') ? newIncome : newExpenses;
+            // Determine if it's Income or Expense based on the 'Income/Expense' column
+            const isIncome = typeRaw.toString().toLowerCase().includes('income');
+            const targetList = isIncome ? newIncome : newExpenses;
+            
+            // Match by category name
             const idx = targetList.findIndex(c => c.category.toLowerCase() === category.toString().toLowerCase());
             
             if (idx > -1) {
-              targetList[idx].amountUsd = amount;
+              targetList[idx].amountUsd += amount; // Aggregate if multiple entries for same category
+              
+              // Add subcategory if provided and doesn't exist
+              if (subCategory) {
+                if (!targetList[idx].subCategories) targetList[idx].subCategories = [];
+                if (!targetList[idx].subCategories.includes(subCategory.toString())) {
+                  targetList[idx].subCategories.push(subCategory.toString());
+                }
+              }
             } else {
+              // Create new category
               targetList.push({ 
                 id: Date.now() + Math.random(), 
                 category: category.toString(), 
                 amountUsd: amount, 
-                icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6', 
-                color: 'text-slate-500',
-                subCategories: []
+                icon: isIncome ? 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V15' : 'M12 6v6m0 0v6m0-6h6m-6 0H6', 
+                color: isIncome ? 'text-emerald-500' : 'text-slate-500',
+                subCategories: subCategory ? [subCategory.toString()] : []
               });
             }
             importCount++;
