@@ -88,7 +88,7 @@ const RentalTrackerForm = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Form Section */}
-      <div className="rounded-[2.5rem] bg-white dark:bg-[#0f0f12] border border-slate-200 dark:border-white/[0.05] p-8 shadow-2xl">
+      <div className="rounded-[2.5rem] bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/[0.05] p-8 shadow-2xl">
         <div className="flex items-center gap-3 mb-8">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <Receipt size={20} />
@@ -135,7 +135,7 @@ const RentalTrackerForm = () => {
                       key={rate}
                       type="button"
                       onClick={() => setFormData({ ...formData, taxRate: rate })}
-                      className={`flex-1 rounded-xl text-xs font-black transition-all ${formData.taxRate === rate ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-white'}`}
+                      className={`flex-1 rounded-xl text-xs font-black transition-all ${formData.taxRate === rate ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-white'}`}
                     >
                       {rate * 100}%
                     </button>
@@ -178,7 +178,7 @@ const RentalTrackerForm = () => {
       </div>
 
       {/* Chart Section */}
-      <div className="rounded-[2.5rem] bg-white dark:bg-[#0f0f12] border border-slate-200 dark:border-white/[0.05] p-8 flex flex-col">
+      <div className="rounded-[2.5rem] bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/[0.05] p-8 flex flex-col">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">

@@ -6,8 +6,8 @@ const Settings = () => {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
-        <div className="border-b border-slate-100 dark:border-slate-700 px-6 py-4">
+      <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] backdrop-blur-xl shadow-sm overflow-hidden">
+        <div className="border-b border-slate-100 dark:border-white/[0.05] px-6 py-4 bg-slate-50/50 dark:bg-white/[0.02]">
           <h2 className="text-lg font-medium text-slate-800 dark:text-white">General Settings</h2>
         </div>
         
@@ -18,16 +18,16 @@ const Settings = () => {
               <p className="text-sm font-medium text-slate-800 dark:text-white">Appearance</p>
               <p className="text-xs text-slate-500">Switch between light and dark mode</p>
             </div>
-            <div className="flex rounded-lg bg-slate-100 dark:bg-slate-900 p-1">
+            <div className="flex rounded-lg bg-slate-100 dark:bg-black/40 p-1">
               <button 
                 onClick={() => setTheme('light')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${theme === 'light' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${theme === 'light' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
               >
                 Light
               </button>
               <button 
                 onClick={() => setTheme('dark')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${theme === 'dark' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${theme === 'dark' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
               >
                 Dark
               </button>
@@ -43,7 +43,7 @@ const Settings = () => {
             <select 
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="rounded-lg border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-black/40 px-3 py-2 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <option value="USD">USD ($)</option>
               <option value="KRW">KRW (₩)</option>
@@ -60,20 +60,20 @@ const Settings = () => {
               type="number" 
               value={exchangeRate}
               onChange={(e) => setExchangeRate(Number(e.target.value))}
-              className="w-32 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-800 dark:text-white text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-32 rounded-lg border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-black/40 px-3 py-2 text-sm text-slate-800 dark:text-white text-right focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
       </div>
 
-      <div className="mt-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+      <div className="mt-8 rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] backdrop-blur-xl p-6 shadow-sm">
         <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Data Export</h3>
         <p className="mt-1 text-xs text-slate-500">Download your financial data for backup or offline analysis.</p>
         <div className="mt-4 flex gap-3">
-          <button className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <button className="rounded-lg border border-slate-200 dark:border-white/[0.1] px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
             Export as CSV
           </button>
-          <button className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <button className="rounded-lg border border-slate-200 dark:border-white/[0.1] px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
             Export as JSON
           </button>
         </div>

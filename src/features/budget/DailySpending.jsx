@@ -92,28 +92,28 @@ const MoneyManagement = () => {
         
         {/* Left Side: Navigation & Summary */}
         <aside className="w-full lg:w-72 space-y-4">
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="bg-white dark:bg-white/[0.03] backdrop-blur-xl p-4 rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm">
             <div className="flex items-center justify-between mb-6 px-2">
               <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Management</h3>
               <button 
                 onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                className={`p-1.5 rounded-lg transition-colors ${isPrivacyMode ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
+                className={`p-1.5 rounded-lg transition-colors ${isPrivacyMode ? 'bg-slate-900 dark:bg-white/10 text-white dark:text-white' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'}`}
               >
                 <MoreHorizontal size={16} />
               </button>
             </div>
 
-            <div className="flex p-1 bg-slate-100 dark:bg-slate-900 rounded-xl mb-6">
+            <div className="flex p-1 bg-slate-100 dark:bg-black/40 rounded-xl mb-6">
               <button 
                 onClick={() => { setActiveTab('Expense'); setSelectedCategory('All'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Expense' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Expense' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
               >
                 <TrendingDown size={14} />
                 Expense
               </button>
               <button 
                 onClick={() => { setActiveTab('Income'); setSelectedCategory('All'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Income' ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Income' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
               >
                 <TrendingUp size={14} />
                 Income
@@ -189,7 +189,7 @@ const MoneyManagement = () => {
 
         {/* Right Side: Content Area */}
         <main className="flex-1 space-y-6">
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="bg-white dark:bg-white/[0.03] backdrop-blur-xl p-6 rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white">
                 {selectedCategory === 'All' ? `${activeTab} Overview` : `${selectedCategory} Breakdown`}
@@ -201,7 +201,7 @@ const MoneyManagement = () => {
               {activeCategories
                 .filter(item => selectedCategory === 'All' || item.category === selectedCategory)
                 .map((item) => (
-                <div key={item.id} className="p-5 rounded-2xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 hover:bg-white dark:hover:bg-slate-700 hover:shadow-md transition-all group relative">
+                <div key={item.id} className="p-5 rounded-2xl border border-slate-100 dark:border-white/[0.05] bg-slate-50/50 dark:bg-white/[0.02] hover:bg-white dark:hover:bg-white/[0.05] hover:shadow-md transition-all group relative">
                   <div className="flex items-center justify-between mb-4">
                     <div className={`p-2 rounded-xl ${item.bg} ${item.darkBg} ${item.color}`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,7 +254,7 @@ const MoneyManagement = () => {
                     </div>
                   )}
 
-                  <div className="mt-4 w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="mt-4 w-full bg-slate-200 dark:bg-white/5 h-1.5 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ${item.color.replace('text', 'bg')}`}
                       style={{ width: `${currentTotalUsd > 0 ? (item.amountUsd / currentTotalUsd * 100).toFixed(0) : 0}%` }}
@@ -268,14 +268,14 @@ const MoneyManagement = () => {
             </div>
 
             {selectedCategory === 'All' && activeTab === 'Expense' && (
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5">
                 <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
                   <span>Spending Progress</span>
                   <span>{((totalExpenseUsd / 7500) * 100).toFixed(0)}% of Goal ({displayFormat(7500)})</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-slate-700 h-3 rounded-full overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-white/5 h-3 rounded-full overflow-hidden">
                   <div 
-                    className="bg-slate-900 dark:bg-slate-100 h-full rounded-full transition-all duration-1000"
+                    className="bg-slate-900 dark:bg-white h-full rounded-full transition-all duration-1000"
                     style={{ width: `${Math.min((totalExpenseUsd / 7500) * 100, 100)}%` }}
                   ></div>
                 </div>
@@ -285,13 +285,13 @@ const MoneyManagement = () => {
 
           {/* Privacy Disclaimer */}
           {isPrivacyMode && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 p-4 rounded-xl flex items-center gap-3">
+            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 p-4 rounded-2xl flex items-center gap-3">
               <div className="text-amber-600 dark:text-amber-500">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-xs text-amber-700 dark:text-amber-500/80 font-medium italic">
+              <p className="text-xs text-amber-700 dark:text-amber-400 font-medium italic">
                 Values are currently masked. Testing in public mode is active.
               </p>
             </div>

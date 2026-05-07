@@ -59,11 +59,11 @@ const Layout = () => {
   const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
-    <div className={`flex h-screen font-sans transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`flex h-screen font-sans transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0a0a0c] text-white' : 'bg-slate-50 text-slate-900'}`}>
       <div className={`fixed inset-0 z-20 bg-black/50 transition-opacity lg:hidden ${isSidebarOpen ? 'opacity-100' : 'pointer-events-none opacity-0'}`} onClick={() => setIsSidebarOpen(false)} />
 
-      <aside className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-slate-900 text-slate-300 transition-transform lg:static lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex h-16 items-center justify-center border-b border-slate-800 px-6">
+      <aside className={`fixed inset-y-0 left-0 z-30 w-64 transform bg-slate-900 text-slate-300 transition-transform lg:static lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full shadow-2xl'}`}>
+        <div className="flex h-16 items-center justify-center border-b border-white/[0.05] px-6">
           <span className="text-xl font-semibold tracking-tight text-white">Global Wealth</span>
         </div>
         <nav className="mt-6 px-4">
@@ -74,7 +74,7 @@ const Layout = () => {
                 navigate(link.path);
                 setIsSidebarOpen(false);
               }}
-              className={`flex w-full items-center rounded-lg px-4 py-3 transition-colors hover:bg-slate-800 hover:text-white ${location.pathname.includes(link.path) ? 'bg-slate-800 text-white' : ''}`}
+              className={`flex w-full items-center rounded-lg px-4 py-3 transition-colors hover:bg-white/5 hover:text-white ${location.pathname.includes(link.path) ? 'bg-white/10 text-white shadow-lg shadow-white/5' : ''}`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={link.icon}></path>
@@ -83,7 +83,7 @@ const Layout = () => {
             </button>
           ))}
         </nav>
-        <div className="absolute bottom-0 w-full border-t border-slate-800 p-4">
+        <div className="absolute bottom-0 w-full border-t border-white/[0.05] p-4">
           <button onClick={handleLogout} className="flex items-center w-full px-4 py-3 text-slate-400 hover:text-white transition-colors">
             <LogOut size={20} />
             <span className="ml-3 font-medium">Sign Out</span>
@@ -92,7 +92,7 @@ const Layout = () => {
       </aside>
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6">
+        <header className="flex h-16 items-center justify-between border-b border-slate-200 dark:border-white/[0.05] bg-white/80 dark:bg-[#0a0a0c]/80 backdrop-blur-md px-6 z-10">
           <button className="text-slate-500 focus:outline-none lg:hidden" onClick={() => setIsSidebarOpen(true)}>
             <Menu size={24} />
           </button>
@@ -100,7 +100,7 @@ const Layout = () => {
             <h1 className="text-lg font-medium text-slate-800 dark:text-white">{currentPageTitle}</h1>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={togglePrivacyMode} className={`p-2 rounded-lg transition-all ${privacyMode ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+            <button onClick={togglePrivacyMode} className={`p-2 rounded-lg transition-all ${privacyMode ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}>
               {privacyMode ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
             <span className="text-sm text-slate-500 dark:text-slate-400">{today}</span>

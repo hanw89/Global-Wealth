@@ -46,7 +46,7 @@ const TransactionLog = ({ activeTab, categories }) => {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+      <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] backdrop-blur-xl p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <PlusCircle size={18} className="text-indigo-600" />
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">Add New {activeTab}</h3>
@@ -58,7 +58,7 @@ const TransactionLog = ({ activeTab, categories }) => {
               placeholder="Description (e.g. Lunch)"
               value={newTransaction.description}
               onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-black/40 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-900 dark:text-white"
             />
           </div>
           <div>
@@ -67,14 +67,14 @@ const TransactionLog = ({ activeTab, categories }) => {
               placeholder={`Amount (${currency})`}
               value={newTransaction.amount}
               onChange={(e) => setNewTransaction({ ...newTransaction, amount: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-black/40 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-900 dark:text-white"
             />
           </div>
           <div>
             <select
               value={newTransaction.category}
               onChange={(e) => setNewTransaction({ ...newTransaction, category: e.target.value })}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              className="w-full rounded-xl border border-slate-200 dark:border-white/[0.1] bg-slate-50 dark:bg-black/40 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-slate-900 dark:text-white"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
@@ -87,8 +87,8 @@ const TransactionLog = ({ activeTab, categories }) => {
         </form>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
-        <div className="border-b border-slate-100 dark:border-slate-700 px-6 py-4 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] backdrop-blur-xl shadow-sm overflow-hidden">
+        <div className="border-b border-slate-100 dark:border-white/[0.05] px-6 py-4 bg-slate-50/50 dark:bg-white/[0.02] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-slate-800 dark:text-white">Recent Activity</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -97,21 +97,21 @@ const TransactionLog = ({ activeTab, categories }) => {
               placeholder="Search transactions..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="pl-10 pr-4 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+              className="pl-10 pr-4 py-1.5 rounded-lg border border-slate-200 dark:border-white/[0.1] bg-white dark:bg-black/40 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64 text-slate-900 dark:text-white"
             />
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-900/30 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <tr className="bg-slate-50 dark:bg-white/[0.02] text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 <th className="px-6 py-4">Date</th>
                 <th className="px-6 py-4">Description</th>
                 <th className="px-6 py-4">Category</th>
                 <th className="px-6 py-4 text-right">Amount</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
               {filteredTransactions.length > 0 ? (
                 filteredTransactions.map((t) => (
                   <tr key={t.id} className="text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors group">

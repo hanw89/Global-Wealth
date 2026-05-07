@@ -37,7 +37,7 @@ const AddRentalForm = () => {
   });
 
   return (
-    <div className="p-6 rounded-3xl bg-white dark:bg-[#0f0f12] border border-slate-200 dark:border-white/[0.05] shadow-xl">
+    <div className="p-6 rounded-3xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/[0.05] shadow-xl">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
           <Home size={18} />

@@ -58,11 +58,10 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-full bg-[#0a0a0c] text-slate-200 p-6 font-sans">
-      <main className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Market Status Bar */}
-        <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-white/[0.02] border border-white/[0.05] text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+    <div className="max-w-7xl mx-auto space-y-8 font-sans">
+      
+      {/* Market Status Bar */}
+      <div className="flex items-center justify-between px-4 py-2 rounded-xl bg-slate-100 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] text-[10px] text-slate-500 font-bold uppercase tracking-widest">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex items-center gap-1.5">
               <div className={`w-1.5 h-1.5 rounded-full ${loading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
@@ -265,8 +264,7 @@ const Dashboard = () => {
           </div>
         </section>
 
-      </main>
-    </div>
+      </div>
   );
 };
 
