@@ -10,7 +10,7 @@ import {
 import { AlertTriangle, CheckCircle2, RefreshCw, PieChart as PieIcon, ArrowRight } from 'lucide-react';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
 import { useMarketData } from '../../../hooks/useMarketData.js';
-import { useAppContext } from '../../../context/AppContext.jsx';
+import { useAppContext } from '../../../context/AppContext.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 
 // Targets for Rebalancing Logic

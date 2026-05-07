@@ -1,16 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { fetchCryptoPrices, fetchStockPrices } from '../services/marketService';
 
 export const usePriceTracker = (options = { stocks: ['AAPL', 'TSLA', 'NVDA', 'VOO'], cryptos: ['bitcoin', 'ethereum'] }) => {
-  const [prices, setPrices] = useState({ stocks: {}, cryptos: {} });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
-
-  const updatePrices = useCallback(async () => {
-    try {
-      // setError(null); // Clear previous errors on retry
-      
+  const { data, isLoading, error, dataUpdatedAt, refetch } = useQuery({
+    queryKey: ['market-prices', options.stocks, options.cryptos],
+    queryFn: async () => {
       const [cryptoData, stockData] = await Promise.all([
         fetchCryptoPrices(options.cryptos).catch(err => {
           console.warn('Crypto fetch failed:', err.message);
@@ -22,28 +16,20 @@ export const usePriceTracker = (options = { stocks: ['AAPL', 'TSLA', 'NVDA', 'VO
         })
       ]);
 
-      setPrices(prev => ({
-        cryptos: cryptoData || prev.cryptos,
-        stocks: stockData || prev.stocks
-      }));
-      
-      setLastUpdated(new Date());
-      setLoading(false);
-    } catch (err) {
-      setError(err.message);
-      setLoading(false);
-    }
-  }, [options.cryptos, options.stocks]);
+      return {
+        cryptos: cryptoData || {},
+        stocks: stockData || {}
+      };
+    },
+    refetchInterval: 60000, // 60 seconds
+    staleTime: 55000,
+  });
 
-  useEffect(() => {
-    updatePrices(); // Initial fetch
-
-    const intervalId = setInterval(() => {
-      updatePrices();
-    }, 60000); // 60 seconds
-
-    return () => clearInterval(intervalId);
-  }, [updatePrices]);
-
-  return { prices, loading, error, lastUpdated, refresh: updatePrices };
+  return { 
+    prices: data || { stocks: {}, cryptos: {} }, 
+    loading: isLoading, 
+    error: error?.message || null, 
+    lastUpdated: dataUpdatedAt ? new Date(dataUpdatedAt) : null, 
+    refresh: refetch 
+  };
 };

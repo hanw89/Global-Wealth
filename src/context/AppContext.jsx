@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useExchangeRate } from '../hooks/useExchangeRate.js';
-
-const AppContext = createContext();
+import { AppContext } from './AppContext.js';
 
 export const AppProvider = ({ children }) => {
   const [theme, setTheme] = useState(localStorage.getItem('app-theme') || 'light');
@@ -51,12 +50,4 @@ export const AppProvider = ({ children }) => {
       {children}
     </AppContext.Provider>
   );
-};
-
-export const useAppContext = () => {
-  const context = useContext(AppContext);
-  if (!context) {
-    throw new Error('useAppContext must be used within an AppProvider');
-  }
-  return context;
 };

@@ -1,10 +1,9 @@
 import React from 'react';
-import { useAppContext } from '../../../context/AppContext.jsx';
-import { formatCurrency } from '../../../utils/currencyFormatter.js';
+import { useAppContext } from '../../../context/AppContext.js';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
 
 const GlobalAssetList = () => {
-  const { currency, convertAmount, exchangeRate } = useAppContext();
+  const { exchangeRate } = useAppContext();
   const { data: portfolio, isLoading, error } = usePortfolio(exchangeRate);
 
   const assets = portfolio?.dbAssets?.filter(a => a.type === 'Stock' || a.type === 'Crypto') || [];

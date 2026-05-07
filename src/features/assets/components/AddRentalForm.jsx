@@ -37,12 +37,12 @@ const AddRentalForm = () => {
   });
 
   return (
-    <div className="p-6 rounded-3xl bg-[#0f0f12] border border-white/[0.05] shadow-xl">
+    <div className="p-6 rounded-3xl bg-white dark:bg-[#0f0f12] border border-slate-200 dark:border-white/[0.05] shadow-xl">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
           <Home size={18} />
         </div>
-        <h3 className="font-bold text-white uppercase text-xs tracking-widest">Add Rental Asset</h3>
+        <h3 className="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">Add Rental Asset</h3>
       </div>
 
       <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
@@ -52,7 +52,7 @@ const AddRentalForm = () => {
             <input
               {...register('propertyName', { required: true })}
               placeholder="e.g. Gangnam Studio B"
-              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+              className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
             />
           </div>
           <div>
@@ -62,7 +62,7 @@ const AddRentalForm = () => {
                 {...register('monthlyRent', { required: true })}
                 type="number"
                 placeholder="2,500,000"
-                className="w-full bg-black/40 border border-white/10 rounded-xl px-9 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+                className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-9 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 font-bold text-xs">₩</span>
             </div>

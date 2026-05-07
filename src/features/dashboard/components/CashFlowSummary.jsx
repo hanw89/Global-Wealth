@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { TrendingUp, Globe, DollarSign, Wallet, Home, Zap, ArrowUpRight, CheckCircle2 } from 'lucide-react';
-import { useAppContext } from '../../../context/AppContext.jsx';
+import { useAppContext } from '../../../context/AppContext.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { fetchHistoricalForex } from '../../../services/marketService.js';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';

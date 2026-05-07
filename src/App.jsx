@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import AssetTracker from './features/assets/AssetTracker.jsx';
 import MoneyManagement from './features/budget/DailySpending.jsx';
 import Settings from './components/Settings.jsx';
 import Dashboard from './features/dashboard/Dashboard.jsx';
 import Login from './components/Login.jsx';
-import { useAppContext } from './context/AppContext.jsx';
+import { useAppContext } from './context/AppContext.js';
 import { supabase } from './lib/supabaseClient';
 import { Eye, EyeOff, LogOut, Menu } from 'lucide-react';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -34,10 +34,10 @@ const ProtectedRoute = ({ children }) => {
 
   if (!session) return <Navigate to="/login" replace />;
 
-  return children;
+  return <Outlet />;
 };
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { theme, privacyMode, togglePrivacyMode } = useAppContext();
   const navigate = useNavigate();
@@ -56,6 +56,7 @@ const Layout = ({ children }) => {
   ];
 
   const currentPageTitle = navLinks.find(link => location.pathname.includes(link.path))?.name || 'Dashboard';
+  const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <div className={`flex h-screen font-sans transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'}`}>
@@ -102,11 +103,11 @@ const Layout = ({ children }) => {
             <button onClick={togglePrivacyMode} className={`p-2 rounded-lg transition-all ${privacyMode ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
               {privacyMode ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
-            <span className="text-sm text-slate-500 dark:text-slate-400">May 3, 2026</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{today}</span>
           </div>
         </header>
         <main className={`flex-1 overflow-y-auto p-6 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0a0a0c] text-white' : 'bg-slate-50 text-slate-900'}`}>
-          {children}
+          <Outlet />
         </main>
       </div>
     </div>
@@ -117,11 +118,15 @@ const App = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-      <Route path="/assets" element={<ProtectedRoute><Layout><AssetTracker /></Layout></ProtectedRoute>} />
-      <Route path="/money-management" element={<ProtectedRoute><Layout><MoneyManagement /></Layout></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Layout><Settings /></Layout></ProtectedRoute>} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/assets" element={<AssetTracker />} />
+          <Route path="/money-management" element={<MoneyManagement />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Route>
     </Routes>
   );
 };

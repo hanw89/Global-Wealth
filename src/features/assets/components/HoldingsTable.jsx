@@ -10,7 +10,7 @@ import {
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
 import { useMarketData } from '../../../hooks/useMarketData.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
-import { useAppContext } from '../../../context/AppContext.jsx';
+import { useAppContext } from '../../../context/AppContext.js';
 
 const SortIcon = ({ column, sortConfig }) => {
   if (sortConfig.key !== column) return <ArrowUpDown size={12} className="opacity-30" />;

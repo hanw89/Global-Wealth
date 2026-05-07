@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppContext } from '../../context/AppContext.jsx';
+import { useAppContext } from '../../context/AppContext.js';
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import ExpenseLog from './components/ExpenseLog.jsx';
 import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal } from 'lucide-react';
@@ -297,10 +297,9 @@ const MoneyManagement = () => {
             </div>
           )}
 
-          {/* Transaction Log */}
           <div className="mt-12">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Transaction Log</h2>
-            <ExpenseLog activeTab={activeTab} categories={allCategoryNames} />
+            <ExpenseLog key={activeTab} activeTab={activeTab} categories={allCategoryNames} />
           </div>
         </main>
       </div>

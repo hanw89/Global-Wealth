@@ -18,7 +18,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { fetchHistoricalForex, fetchExchangeRate } from '../../../services/marketService.js';
-import { useAppContext } from '../../../context/AppContext.jsx';
+import { useAppContext } from '../../../context/AppContext.js';
 
 const ForexAnalyzer = () => {
   const { privacyMode } = useAppContext();

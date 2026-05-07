@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppContext } from '../context/AppContext.jsx';
+import { useAppContext } from '../context/AppContext.js';
 
 const Settings = () => {
   const { theme, setTheme, currency, setCurrency, exchangeRate, setExchangeRate } = useAppContext();

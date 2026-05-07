@@ -3,7 +3,7 @@ import { AlertCircle, ArrowUpRight, ArrowDownRight, RefreshCw, Zap, Clock } from
 import { useMarketData } from '../../../hooks/useMarketData.js';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
-import { useAppContext } from '../../../context/AppContext.jsx';
+import { useAppContext } from '../../../context/AppContext.js';
 
 const MarketWatchTable = () => {
   const { privacyMode, exchangeRate } = useAppContext();

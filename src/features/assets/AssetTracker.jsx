@@ -12,7 +12,7 @@ const AssetTracker = () => {
     <div className="mx-auto max-w-7xl space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Asset Inventory</h1>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Asset Inventory</h1>
           <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mt-1">Real-time Global Ledger</p>
         </div>
       </div>

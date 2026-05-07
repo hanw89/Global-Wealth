@@ -23,7 +23,7 @@ import AssetAllocation from './components/AssetAllocation.jsx';
 import MarketWatchTable from '../market-watch/components/MarketWatchTable.jsx';
 
 import HoldingsTable from '../assets/components/HoldingsTable.jsx';
-import { useAppContext } from '../../context/AppContext.jsx';
+import { useAppContext } from '../../context/AppContext.js';
 
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import { exportToCSV } from '../../utils/exportUtils.js';

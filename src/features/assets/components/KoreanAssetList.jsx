@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAppContext } from '../../../context/AppContext.jsx';
+import { useAppContext } from '../../../context/AppContext.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
 

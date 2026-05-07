@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppContext } from '../../../context/AppContext.jsx';
+import { useAppContext } from '../../../context/AppContext.js';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { PlusCircle, Search } from 'lucide-react';
 
@@ -14,13 +14,6 @@ const TransactionLog = ({ activeTab, categories }) => {
     category: categories[0] || 'Food',
     type: activeTab 
   });
-
-  // Update default category when categories change
-  React.useEffect(() => {
-    if (categories.length > 0) {
-      setNewTransaction(prev => ({ ...prev, category: categories[0], type: activeTab }));
-    }
-  }, [categories, activeTab]);
 
   const addTransaction = (e) => {
     e.preventDefault();
