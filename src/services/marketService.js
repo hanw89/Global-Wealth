@@ -38,31 +38,47 @@ export const fetchCryptoPrices = async (ids = []) => {
 };
 
 /**
- * Simulated Stock Fetcher (Browser Compatible)
- * In a production app, this would call a secure backend proxy.
+ * Live Stock Fetcher (using Yahoo Finance via AllOrigins Proxy)
+ * This bypasses CORS and provides real-time data as requested.
  */
 export const fetchStockPrices = async (tickers = []) => {
   if (!tickers || tickers.length === 0) return {};
-  // Simulate network latency
-  await new Promise(resolve => setTimeout(resolve, 500));
-
+  
   const stockData = {};
-  const mockReference = {
-    'AAPL': { p: 185.40, c: 1.2 },
-    'TSLA': { p: 210.15, c: -2.4 },
-    'NVDA': { p: 485.20, c: 4.8 },
-    'VOO': { p: 450.10, c: 0.5 },
-  };
-
-  tickers.forEach(ticker => {
-    const ref = mockReference[ticker] || { p: 150.00, c: 0.0 };
-    // Add small random movement for "live" feel
-    const volatility = (Math.random() - 0.5) * 0.2;
-    stockData[ticker] = {
-      price: ref.p + volatility,
-      change: ref.c + (volatility / ref.p) * 100
-    };
-  });
+  
+  // Parallel fetch for efficiency
+  await Promise.all(tickers.map(async (ticker) => {
+    try {
+      // Use AllOrigins as a reliable CORS proxy
+      const encodedUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d`);
+      const response = await fetch(`https://api.allorigins.win/get?url=${encodedUrl}`);
+      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const data = await response.json();
+      if (!data.contents) throw new Error('No contents found in proxy response');
+      
+      const contents = JSON.parse(data.contents);
+      const result = contents.chart.result?.[0];
+      
+      if (result) {
+        const price = result.meta.regularMarketPrice;
+        const prevClose = result.meta.chartPreviousClose;
+        const change = prevClose ? ((price - prevClose) / prevClose) * 100 : 0;
+        
+        stockData[ticker] = {
+          price,
+          change
+        };
+      } else {
+        console.warn(`No data found for ticker: ${ticker}`);
+        stockData[ticker] = { price: 0, change: 0 };
+      }
+    } catch (error) {
+      console.error(`Error fetching price for ${ticker}:`, error);
+      stockData[ticker] = { price: 0, change: 0 };
+    }
+  }));
 
   return stockData;
 };
