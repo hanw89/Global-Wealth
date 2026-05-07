@@ -5,7 +5,7 @@ import ExpenseLog from './components/ExpenseLog.jsx';
 import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal } from 'lucide-react';
 
 const MoneyManagement = () => {
-  const { currency, exchangeRate, convertAmount } = useAppContext();
+  const { currency, exchangeRate, convertAmount, theme } = useAppContext();
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const [activeTab, setActiveTab] = useState('Expense'); // 'Income' or 'Expense'
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -87,33 +87,33 @@ const MoneyManagement = () => {
   ]);
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto font-sans">
       <div className="flex flex-col lg:flex-row gap-8">
         
         {/* Left Side: Navigation & Summary */}
         <aside className="w-full lg:w-72 space-y-4">
-          <div className="bg-white dark:bg-white/[0.03] backdrop-blur-xl p-4 rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm">
+          <div className="bg-white/5 backdrop-blur-xl p-4 rounded-3xl border border-white/10 shadow-xl">
             <div className="flex items-center justify-between mb-6 px-2">
-              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Management</h3>
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Management</h3>
               <button 
                 onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-                className={`p-1.5 rounded-lg transition-colors ${isPrivacyMode ? 'bg-slate-900 dark:bg-white/10 text-white dark:text-white' : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5'}`}
+                className={`p-1.5 rounded-lg transition-colors ${isPrivacyMode ? 'bg-white/10 text-white' : 'text-slate-500 hover:bg-white/5'}`}
               >
                 <MoreHorizontal size={16} />
               </button>
             </div>
 
-            <div className="flex p-1 bg-slate-100 dark:bg-black/40 rounded-xl mb-6">
+            <div className="flex p-1 bg-black/40 rounded-xl mb-6">
               <button 
                 onClick={() => { setActiveTab('Expense'); setSelectedCategory('All'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Expense' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Expense' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-500'}`}
               >
                 <TrendingDown size={14} />
                 Expense
               </button>
               <button 
                 onClick={() => { setActiveTab('Income'); setSelectedCategory('All'); }}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Income' ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm' : 'text-slate-500'}`}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-bold rounded-lg transition-all ${activeTab === 'Income' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-500'}`}
               >
                 <TrendingUp size={14} />
                 Income
@@ -123,10 +123,10 @@ const MoneyManagement = () => {
             <nav className="space-y-1">
               <button
                 onClick={() => setSelectedCategory('All')}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === 'All' ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === 'All' ? 'bg-white/10 text-white shadow-md' : 'text-slate-400 hover:bg-white/5'}`}
               >
                 <span>All {activeTab}s</span>
-                <span className={`text-[10px] px-1.5 py-0.5 rounded ${selectedCategory === 'All' ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded ${selectedCategory === 'All' ? 'bg-white/20' : 'bg-white/5 text-slate-500'}`}>
                   {activeCategories.length}
                 </span>
               </button>
@@ -135,9 +135,9 @@ const MoneyManagement = () => {
                 <div key={item.id}>
                   <button
                     onClick={() => setSelectedCategory(item.category)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === item.category ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === item.category ? 'bg-white/10 text-white shadow-md' : 'text-slate-400 hover:bg-white/5'}`}
                   >
-                    <div className={`p-1.5 rounded-lg ${selectedCategory === item.category ? 'bg-white/10' : item.bg + ' ' + item.darkBg + ' ' + item.color}`}>
+                    <div className={`p-1.5 rounded-lg ${selectedCategory === item.category ? 'bg-white/10' : 'bg-white/5 ' + item.color}`}>
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
                       </svg>
@@ -147,14 +147,14 @@ const MoneyManagement = () => {
                   {selectedCategory === item.category && item.subCategories && (
                     <div className="ml-9 mt-1 space-y-1">
                       {item.subCategories.map(sub => (
-                        <div key={sub} className="px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+                        <div key={sub} className="px-3 py-1.5 text-xs text-slate-500 flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-slate-700" />
                           {sub}
                         </div>
                       ))}
                       <button 
                         onClick={() => addSubCategory(item.id)}
-                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 transition-colors"
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
                       >
                         <Plus size={12} />
                         Add Sub
@@ -166,9 +166,9 @@ const MoneyManagement = () => {
 
               <button
                 onClick={addCategory}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all border border-dashed border-indigo-200 dark:border-indigo-800/50 mt-4"
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-indigo-400 hover:bg-white/5 transition-all border border-dashed border-white/10 mt-4"
               >
-                <div className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900/40">
+                <div className="p-1.5 rounded-lg bg-indigo-500/10">
                   <Plus size={16} />
                 </div>
                 <span>Add Category</span>
@@ -176,8 +176,8 @@ const MoneyManagement = () => {
             </nav>
           </div>
 
-          <div className={`${activeTab === 'Expense' ? 'bg-slate-900' : 'bg-emerald-900'} dark:bg-slate-800 p-6 rounded-2xl text-white shadow-lg overflow-hidden relative border border-white/5`}>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total {activeTab} ({currency})</p>
+          <div className={`${activeTab === 'Expense' ? 'bg-rose-500/10' : 'bg-emerald-500/10'} backdrop-blur-xl p-6 rounded-3xl text-white shadow-xl overflow-hidden relative border border-white/5`}>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total {activeTab} ({currency})</p>
             <p className={`text-2xl font-black transition-all ${isPrivacyMode ? 'blur-md' : ''}`}>
               {displayFormat(currentTotalUsd)}
             </p>
@@ -189,21 +189,21 @@ const MoneyManagement = () => {
 
         {/* Right Side: Content Area */}
         <main className="flex-1 space-y-6">
-          <div className="bg-white dark:bg-white/[0.03] backdrop-blur-xl p-6 rounded-3xl border border-slate-200 dark:border-white/[0.08] shadow-sm">
+          <div className="bg-white/5 backdrop-blur-xl p-6 rounded-3xl border border-white/10 shadow-xl">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              <h2 className="text-xl font-bold text-white">
                 {selectedCategory === 'All' ? `${activeTab} Overview` : `${selectedCategory} Breakdown`}
               </h2>
-              <span className="text-xs font-mono text-slate-400 dark:text-slate-500 uppercase">May 2026</span>
+              <span className="text-xs font-mono text-slate-500 uppercase">May 2026</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeCategories
                 .filter(item => selectedCategory === 'All' || item.category === selectedCategory)
                 .map((item) => (
-                <div key={item.id} className="p-5 rounded-2xl border border-slate-100 dark:border-white/[0.05] bg-slate-50/50 dark:bg-white/[0.02] hover:bg-white dark:hover:bg-white/[0.05] hover:shadow-md transition-all group relative">
+                <div key={item.id} className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group relative shadow-inner">
                   <div className="flex items-center justify-between mb-4">
-                    <div className={`p-2 rounded-xl ${item.bg} ${item.darkBg} ${item.color}`}>
+                    <div className={`p-2 rounded-xl bg-white/5 ${item.color}`}>
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
                       </svg>
@@ -211,35 +211,35 @@ const MoneyManagement = () => {
                     <div className="flex gap-2">
                       <button 
                         onClick={() => addSubCategory(item.id)}
-                        className="text-[10px] font-bold text-indigo-500 uppercase tracking-tighter hover:text-indigo-700 transition-colors"
+                        className="text-[10px] font-bold text-indigo-400 uppercase tracking-tighter hover:text-indigo-300 transition-colors"
                       >
                         + Sub
                       </button>
                       <button 
                         onClick={() => editingId === item.id ? handleSave() : setEditingId(item.id)}
-                        className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-tighter hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                        className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter hover:text-slate-300 transition-colors"
                       >
                         {editingId === item.id ? 'Save' : 'Edit'}
                       </button>
                     </div>
                   </div>
-                  <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1">{item.category}</h4>
+                  <h4 className="text-xs font-bold text-slate-500 uppercase mb-1">{item.category}</h4>
                   
                   {editingId === item.id ? (
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-black text-slate-900 dark:text-white">{currency === 'USD' ? '$' : '₩'}</span>
+                      <span className="text-2xl font-black text-white">{currency === 'USD' ? '$' : '₩'}</span>
                       <input
                         type="number"
                         value={currency === 'KRW' ? (item.amountUsd * exchangeRate).toFixed(0) : item.amountUsd}
                         onChange={(e) => handleAmountChange(item.id, e.target.value)}
-                        className="text-2xl font-black text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded px-2 py-1 w-full focus:outline-none focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-500"
+                        className="text-2xl font-black text-white bg-black/40 border border-white/10 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-white/20"
                         autoFocus
                         onBlur={handleSave}
                         onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                       />
                     </div>
                   ) : (
-                    <p className={`text-2xl font-black text-slate-900 dark:text-white transition-all ${isPrivacyMode ? 'blur-sm select-none' : ''}`}>
+                    <p className={`text-2xl font-black text-white transition-all ${isPrivacyMode ? 'blur-sm select-none' : ''}`}>
                       {displayFormat(item.amountUsd)}
                     </p>
                   )}
@@ -247,20 +247,20 @@ const MoneyManagement = () => {
                   {item.subCategories && item.subCategories.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
                       {item.subCategories.map(sub => (
-                        <span key={sub} className="px-2 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
+                        <span key={sub} className="px-2 py-1 rounded-md bg-white/5 border border-white/5 text-[9px] font-bold text-slate-400 uppercase tracking-tight">
                           {sub}
                         </span>
                       ))}
                     </div>
                   )}
 
-                  <div className="mt-4 w-full bg-slate-200 dark:bg-white/5 h-1.5 rounded-full overflow-hidden">
+                  <div className="mt-4 w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all duration-1000 ${item.color.replace('text', 'bg')}`}
                       style={{ width: `${currentTotalUsd > 0 ? (item.amountUsd / currentTotalUsd * 100).toFixed(0) : 0}%` }}
                     ></div>
                   </div>
-                  <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                  <p className="mt-2 text-[10px] text-slate-500 font-medium">
                     {currentTotalUsd > 0 ? (item.amountUsd / currentTotalUsd * 100).toFixed(1) : 0}% of total monthly {activeTab.toLowerCase()}
                   </p>
                 </div>
@@ -268,14 +268,14 @@ const MoneyManagement = () => {
             </div>
 
             {selectedCategory === 'All' && activeTab === 'Expense' && (
-              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5">
-                <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-2">
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
                   <span>Spending Progress</span>
                   <span>{((totalExpenseUsd / 7500) * 100).toFixed(0)}% of Goal ({displayFormat(7500)})</span>
                 </div>
-                <div className="w-full bg-slate-100 dark:bg-white/5 h-3 rounded-full overflow-hidden">
+                <div className="w-full bg-white/5 h-3 rounded-full overflow-hidden">
                   <div 
-                    className="bg-slate-900 dark:bg-white h-full rounded-full transition-all duration-1000"
+                    className="bg-white h-full rounded-full transition-all duration-1000"
                     style={{ width: `${Math.min((totalExpenseUsd / 7500) * 100, 100)}%` }}
                   ></div>
                 </div>
@@ -285,20 +285,21 @@ const MoneyManagement = () => {
 
           {/* Privacy Disclaimer */}
           {isPrivacyMode && (
-            <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 p-4 rounded-2xl flex items-center gap-3">
-              <div className="text-amber-600 dark:text-amber-500">
+            <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center gap-3">
+              <div className="text-amber-500">
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-xs text-amber-700 dark:text-amber-400 font-medium italic">
+              <p className="text-xs text-amber-400 font-medium italic">
                 Values are currently masked. Testing in public mode is active.
               </p>
             </div>
           )}
 
+          {/* Transaction Log */}
           <div className="mt-12">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Transaction Log</h2>
+            <h2 className="text-xl font-bold text-white mb-6">Transaction Log</h2>
             <ExpenseLog key={activeTab} activeTab={activeTab} categories={allCategoryNames} />
           </div>
         </main>

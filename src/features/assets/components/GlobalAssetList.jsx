@@ -16,32 +16,36 @@ const GlobalAssetList = () => {
   );
 
   return (
-    <div className="rounded-3xl border border-slate-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.03] backdrop-blur-xl shadow-sm overflow-hidden">
-      <div className="border-b border-slate-100 dark:border-white/[0.05] px-6 py-4 bg-slate-50/50 dark:bg-white/[0.02]">
-        <h2 className="text-lg font-medium text-slate-800 dark:text-white">Global Assets (US/Intl)</h2>
+    <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl shadow-2xl overflow-hidden">
+      <div className="border-b border-white/[0.05] px-6 py-4 bg-white/[0.02]">
+        <h2 className="text-lg font-medium text-white">Global Assets (US/Intl)</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-slate-50 dark:bg-white/[0.02] text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            <tr className="bg-white/[0.02] text-xs font-semibold uppercase tracking-wider text-slate-400">
               <th className="px-6 py-3">Asset</th>
               <th className="px-6 py-3">Type</th>
               <th className="px-6 py-3 text-right">Value</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
-            {assets.map((asset, i) => (
-              <tr key={i} className="text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors">
+          <tbody className="divide-y divide-white/[0.05]">
+            {assets.length > 0 ? assets.map((asset, i) => (
+              <tr key={i} className="text-sm text-slate-300 hover:bg-white/[0.02] transition-colors">
                 <td className="px-6 py-4">
-                  <div className="font-medium text-slate-900 dark:text-white">{asset.name || asset.ticker}</div>
-                  <div className="text-xs text-slate-400 font-mono">{asset.ticker}</div>
+                  <div className="font-medium text-white">{asset.name || asset.ticker}</div>
+                  <div className="text-xs text-slate-500 font-mono">{asset.ticker}</div>
                 </td>
                 <td className="px-6 py-4">{asset.type}</td>
-                <td className="px-6 py-4 text-right tabular-nums">
+                <td className="px-6 py-4 text-right tabular-nums text-white">
                   {asset.quantity} units
                 </td>
               </tr>
-            ))}
+            )) : (
+              <tr>
+                <td colSpan="3" className="px-6 py-8 text-center text-slate-500 italic">No assets registered yet.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

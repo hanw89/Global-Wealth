@@ -38,12 +38,12 @@ const AddCryptoForm = () => {
   });
 
   return (
-    <div className="p-6 rounded-3xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/[0.05] shadow-xl">
+    <div className="p-6 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400">
+        <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
           <Zap size={18} />
         </div>
-        <h3 className="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">Add Digital Asset</h3>
+        <h3 className="font-bold text-white uppercase text-xs tracking-widest">Add Digital Asset</h3>
       </div>
 
       <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
@@ -53,7 +53,7 @@ const AddCryptoForm = () => {
             <input
               {...register('symbol', { required: true })}
               placeholder="e.g. BTC"
-              className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all uppercase"
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all uppercase"
             />
           </div>
           <div>
@@ -63,7 +63,7 @@ const AddCryptoForm = () => {
               type="number"
               step="any"
               placeholder="0.00"
-              className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
             />
           </div>
         </div>
@@ -71,7 +71,7 @@ const AddCryptoForm = () => {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-orange-500/20"
         >
           {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           <span>Sync Crypto Ledger</span>

@@ -88,13 +88,13 @@ const RentalTrackerForm = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Form Section */}
-      <div className="rounded-[2.5rem] bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/[0.05] p-8 shadow-2xl">
+      <div className="rounded-[2.5rem] bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] p-8 shadow-2xl">
         <div className="flex items-center gap-3 mb-8">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             <Receipt size={20} />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Income Analysis</h3>
+            <h3 className="text-lg font-bold text-white">Income Analysis</h3>
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Net vs Gross Calculator</p>
           </div>
         </div>
@@ -106,7 +106,7 @@ const RentalTrackerForm = () => {
               <div className="relative group">
                 <input
                   type="number"
-                  className="w-full bg-slate-50 dark:bg-black/60 border border-slate-200 dark:border-white/10 rounded-2xl px-10 py-4 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-all outline-none font-bold"
+                  className="w-full bg-black/60 border border-white/10 rounded-2xl px-10 py-4 text-sm text-white focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500/40 transition-all outline-none font-bold"
                   value={formData.monthlyRent}
                   onChange={(e) => setFormData({ ...formData, monthlyRent: e.target.value })}
                 />
@@ -120,7 +120,7 @@ const RentalTrackerForm = () => {
                 <div className="relative group">
                   <input
                     type="number"
-                    className="w-full bg-slate-50 dark:bg-black/60 border border-slate-200 dark:border-white/10 rounded-2xl px-10 py-4 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500/40 transition-all outline-none font-bold"
+                    className="w-full bg-black/60 border border-white/10 rounded-2xl px-10 py-4 text-sm text-white focus:ring-2 focus:ring-rose-500/40 focus:border-rose-500/40 transition-all outline-none font-bold"
                     value={formData.managementFee}
                     onChange={(e) => setFormData({ ...formData, managementFee: e.target.value })}
                   />
@@ -129,13 +129,13 @@ const RentalTrackerForm = () => {
               </div>
               <div>
                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 px-1">Est. Income Tax</label>
-                <div className="flex p-1 bg-slate-50 dark:bg-black/60 border border-slate-200 dark:border-white/10 rounded-2xl h-[54px]">
+                <div className="flex p-1 bg-black/60 border border-white/10 rounded-2xl h-[54px]">
                   {[0.1, 0.2].map(rate => (
                     <button
                       key={rate}
                       type="button"
                       onClick={() => setFormData({ ...formData, taxRate: rate })}
-                      className={`flex-1 rounded-xl text-xs font-black transition-all ${formData.taxRate === rate ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-lg' : 'text-slate-500 hover:text-slate-700 dark:hover:text-white'}`}
+                      className={`flex-1 rounded-xl text-xs font-black transition-all ${formData.taxRate === rate ? 'bg-white/10 text-white shadow-lg' : 'text-slate-500 hover:text-white'}`}
                     >
                       {rate * 100}%
                     </button>
@@ -145,10 +145,10 @@ const RentalTrackerForm = () => {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-3">
+          <div className="pt-6 border-t border-white/5 space-y-3">
             <div className="flex justify-between items-center px-2">
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Gross Income</span>
-              <span className="text-sm font-bold text-slate-900 dark:text-white">{formatVal(calculations.grossRent, 'KRW')}</span>
+              <span className="text-sm font-bold text-white">{formatVal(calculations.grossRent, 'KRW')}</span>
             </div>
             <div className="flex justify-between items-center px-2">
               <span className="text-[10px] font-black text-rose-500/80 uppercase tracking-widest">Total Deductions</span>
@@ -160,7 +160,7 @@ const RentalTrackerForm = () => {
                 <p className="text-xs text-slate-400 font-medium italic">After conversion & fees</p>
               </div>
               <div className="text-right">
-                <p className={`text-2xl font-black text-slate-900 dark:text-white ${privacyMode ? 'blur-md' : ''}`}>{formatVal(calculations.finalNetUsd)}</p>
+                <p className={`text-2xl font-black text-white ${privacyMode ? 'blur-md' : ''}`}>{formatVal(calculations.finalNetUsd)}</p>
                 <p className="text-[10px] font-bold text-slate-500">USD / Month</p>
               </div>
             </div>
@@ -169,7 +169,7 @@ const RentalTrackerForm = () => {
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="w-full py-4 rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-black font-black text-sm hover:bg-slate-800 dark:hover:bg-emerald-400 transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-4 rounded-2xl bg-white text-black font-black text-sm hover:bg-emerald-400 transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             Commit to Ledger
@@ -178,15 +178,15 @@ const RentalTrackerForm = () => {
       </div>
 
       {/* Chart Section */}
-      <div className="rounded-[2.5rem] bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/[0.05] p-8 flex flex-col">
+      <div className="rounded-[2.5rem] bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] p-8 flex flex-col shadow-2xl">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               <TrendingUp size={20} />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Net vs Gross</h3>
+            <h3 className="text-lg font-bold text-white">Net vs Gross</h3>
           </div>
-          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-slate-100 dark:bg-white/5 px-3 py-1 rounded-full border border-slate-200 dark:border-white/5">
+          <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full border border-white/5">
             USD Projections
           </div>
         </div>
@@ -214,7 +214,6 @@ const RentalTrackerForm = () => {
                 }}
                 itemStyle={{ padding: '2px 0' }}
               />
-
               <Legend 
                 verticalAlign="bottom" 
                 align="center"
@@ -230,13 +229,13 @@ const RentalTrackerForm = () => {
         </div>
 
         <div className="mt-8 grid grid-cols-2 gap-4">
-          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05]">
+          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Efficiency</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white">
+            <p className="text-xl font-bold text-white">
               {((calculations.finalNetUsd / (calculations.grossRent / exchangeRate)) * 100).toFixed(1)}%
             </p>
           </div>
-          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05]">
+          <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05]">
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Total Drag</p>
             <p className="text-xl font-bold text-rose-500">
               -{(100 - (calculations.finalNetUsd / (calculations.grossRent / exchangeRate)) * 100).toFixed(1)}%

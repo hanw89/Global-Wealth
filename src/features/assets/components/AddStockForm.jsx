@@ -38,12 +38,12 @@ const AddStockForm = () => {
   });
 
   return (
-    <div className="p-6 rounded-3xl bg-white dark:bg-white/[0.03] backdrop-blur-xl border border-slate-200 dark:border-white/[0.05] shadow-xl">
+    <div className="p-6 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-2xl">
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
+        <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
           <TrendingUp size={18} />
         </div>
-        <h3 className="font-bold text-slate-900 dark:text-white uppercase text-xs tracking-widest">Add US Equity</h3>
+        <h3 className="font-bold text-white uppercase text-xs tracking-widest">Add US Equity</h3>
       </div>
 
       <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
@@ -53,7 +53,7 @@ const AddStockForm = () => {
             <input
               {...register('ticker', { required: true })}
               placeholder="e.g. AAPL"
-              className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all uppercase"
             />
           </div>
           <div>
@@ -63,7 +63,7 @@ const AddStockForm = () => {
               type="number"
               step="any"
               placeholder="0.00"
-              className="w-full bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
             />
           </div>
         </div>
@@ -71,7 +71,7 @@ const AddStockForm = () => {
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-indigo-500/20"
         >
           {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           <span>Sync Stock Holding</span>
