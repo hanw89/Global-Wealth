@@ -100,35 +100,72 @@ const MoneyManagement = () => {
 
     const reader = new FileReader();
     reader.onload = (evt) => {
-      const bstr = evt.target.result;
-      const wb = XLSX.read(bstr, { type: 'binary' });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws);
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws);
 
-      // Simple mapping logic: expect columns 'Type', 'Category', 'Amount (USD)'
-      const newExpenses = [...expenseCategories];
-      const newIncome = [...incomeCategories];
-
-      data.forEach(row => {
-        const type = row['Type'] || row['type'];
-        const category = row['Category'] || row['category'];
-        const amount = parseFloat(row['Amount (USD)'] || row['amount'] || 0);
-
-        if (type === 'Expense') {
-          const idx = newExpenses.findIndex(c => c.category === category);
-          if (idx > -1) newExpenses[idx].amountUsd = amount;
-          else newExpenses.push({ id: Date.now() + Math.random(), category, amountUsd: amount, icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6', color: 'text-slate-500' });
-        } else if (type === 'Income') {
-          const idx = newIncome.findIndex(c => c.category === category);
-          if (idx > -1) newIncome[idx].amountUsd = amount;
-          else newIncome.push({ id: Date.now() + Math.random(), category, amountUsd: amount, icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6', color: 'text-slate-500' });
+        if (!data || data.length === 0) {
+          alert('The excel file seems to be empty.');
+          return;
         }
-      });
 
-      setExpenseCategories(newExpenses);
-      setIncomeCategories(newIncome);
-      alert('Data imported successfully!');
+        console.log('Imported Data Sample:', data[0]);
+
+        const newExpenses = [...expenseCategories];
+        const newIncome = [...incomeCategories];
+        let importCount = 0;
+
+        data.forEach(row => {
+          // Robust column matching (case-insensitive and partial)
+          const findVal = (prefixes) => {
+            const key = Object.keys(row).find(k => 
+              prefixes.some(p => k.toLowerCase().includes(p.toLowerCase()))
+            );
+            return key ? row[key] : null;
+          };
+
+          const type = findVal(['Type', 'Group']) || 'Expense';
+          const category = findVal(['Category', 'Item', 'Name', 'Label']);
+          let amount = parseFloat(findVal(['Amount', 'Cost', 'Value', 'Price']) || 0);
+          
+          // Determine if amount is in KRW or USD based on column name
+          const amountKey = Object.keys(row).find(k => k.toLowerCase().includes('amount') || k.toLowerCase().includes('cost'));
+          const isKrw = amountKey && amountKey.toLowerCase().includes('krw');
+
+          if (isKrw) {
+            amount = amount / exchangeRate;
+          }
+
+          if (category) {
+            const targetList = type.toLowerCase().includes('income') ? newIncome : newExpenses;
+            const idx = targetList.findIndex(c => c.category.toLowerCase() === category.toString().toLowerCase());
+            
+            if (idx > -1) {
+              targetList[idx].amountUsd = amount;
+            } else {
+              targetList.push({ 
+                id: Date.now() + Math.random(), 
+                category: category.toString(), 
+                amountUsd: amount, 
+                icon: 'M12 6v6m0 0v6m0-6h6m-6 0H6', 
+                color: 'text-slate-500',
+                subCategories: []
+              });
+            }
+            importCount++;
+          }
+        });
+
+        setExpenseCategories(newExpenses);
+        setIncomeCategories(newIncome);
+        alert(`Successfully imported ${importCount} budget entries!`);
+      } catch (error) {
+        console.error('Import Error:', error);
+        alert('Failed to parse the Excel file. Please ensure it is a valid budget spreadsheet.');
+      }
     };
     reader.readAsBinaryString(file);
   };
