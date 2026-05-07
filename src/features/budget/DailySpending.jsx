@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../context/AppContext.js';
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import ExpenseLog from './components/ExpenseLog.jsx';
+import BudgetPieChart from './components/BudgetPieChart.jsx';
 import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal, Download, Upload, RotateCcw, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -359,6 +360,9 @@ const MoneyManagement = () => {
               </p>
             </div>
           )}
+
+          {/* Visual Analysis */}
+          <BudgetPieChart expenseCategories={expenseCategories} incomeCategories={incomeCategories} />
 
           {/* Transaction Log */}
           <div className="mt-12">
