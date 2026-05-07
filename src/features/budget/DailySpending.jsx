@@ -3,6 +3,7 @@ import { useAppContext } from '../../context/AppContext.js';
 import { formatCurrency } from '../../utils/currencyFormatter.js';
 import ExpenseLog from './components/ExpenseLog.jsx';
 import BudgetPieChart from './components/BudgetPieChart.jsx';
+import CategoryMonthlyView from './components/CategoryMonthlyView.jsx';
 import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal, Download, Upload, RotateCcw, FileSpreadsheet } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -139,17 +140,19 @@ const MoneyManagement = () => {
           const description = row['Note'] || row['note'] || row['Accounts'] || row['accounts'] || category;
           
           if (category) {
-            // Determine if it's Income or Expense based on the 'Income/Expense' column
+            // Normalize names for matching
+            const normCategory = category.toString().trim().toLowerCase();
+            const typeRaw = row['Income/Expense'] || row['Type'] || row['type'] || 'Expense';
             const isIncome = typeRaw.toString().toLowerCase().includes('income');
-            const targetList = isIncome ? newIncome : newExpenses;
             
-            // Match by category name
-            const idx = targetList.findIndex(c => c.category.toLowerCase() === category.toString().toLowerCase());
+            const targetList = isIncome ? newIncome : newExpenses;
+            const setTargetList = isIncome ? setIncomeCategories : setExpenseCategories;
+            
+            // Find existing category matching normalized name
+            const idx = targetList.findIndex(c => c.category.trim().toLowerCase() === normCategory);
             
             if (idx > -1) {
-              targetList[idx].amountUsd += amount; // Aggregate if multiple entries for same category
-              
-              // Add subcategory if provided and doesn't exist
+              targetList[idx].amountUsd += amount;
               if (subCategory) {
                 if (!targetList[idx].subCategories) targetList[idx].subCategories = [];
                 if (!targetList[idx].subCategories.includes(subCategory.toString())) {
@@ -157,10 +160,9 @@ const MoneyManagement = () => {
                 }
               }
             } else {
-              // Create new category
               targetList.push({ 
                 id: Date.now() + Math.random(), 
-                category: category.toString(), 
+                category: category.toString().trim(), 
                 amountUsd: amount, 
                 icon: isIncome ? 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16V15' : 'M12 6v6m0 0v6m0-6h6m-6 0H6', 
                 color: isIncome ? 'text-emerald-500' : 'text-slate-500',
@@ -168,14 +170,14 @@ const MoneyManagement = () => {
               });
             }
 
-            // Create individual transaction log
             newTransactions.push({
               id: Date.now() + Math.random(),
               date: dateRaw.toString().includes('T') ? dateRaw.toString().split('T')[0] : dateRaw.toString(),
               description: description.toString(),
-              category: category.toString(),
+              category: category.toString().trim(),
               type: isIncome ? 'Income' : 'Expense',
-              amountUsd: amount
+              amountUsd: amount,
+              note: row['Note'] || row['note'] || ''
             });
 
             importCount++;
@@ -422,6 +424,15 @@ const MoneyManagement = () => {
               ))}
             </div>
           </div>
+
+          {/* Categorical Depth View */}
+          <CategoryMonthlyView 
+            selectedCategory={selectedCategory} 
+            transactions={transactions} 
+            currency={currency} 
+            convertAmount={convertAmount}
+            privacyMode={isPrivacyMode}
+          />
 
           {/* Privacy Disclaimer */}
           {isPrivacyMode && (
