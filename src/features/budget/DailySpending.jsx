@@ -144,9 +144,9 @@ const MoneyManagement = () => {
           return;
         }
 
-        // Keep current categories but reset their all-time totals if we want to sync
-        // Actually, with the new filtered view, we should keep the full history in transactions.
-        // We will just replace the transactions list with the imported one.
+        // Prepare fresh copies of categories
+        const newExpenses = [...expenseCategories];
+        const newIncome = [...incomeCategories];
         const newTransactions = [];
         let importCount = 0;
 
