@@ -70,6 +70,29 @@ const MoneyManagement = () => {
     }
   };
 
+  // Drag and Drop Logic
+  const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+
+  const handleDragStart = (index) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (index) => {
+    if (draggedItemIndex === null) return;
+    
+    const newList = [...activeCategories];
+    const draggedItem = newList[draggedItemIndex];
+    newList.splice(draggedItemIndex, 1);
+    newList.splice(index, 0, draggedItem);
+    
+    setActiveCategories(newList);
+    setDraggedItemIndex(null);
+  };
+
   // Monthly Filter Logic
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
@@ -362,18 +385,30 @@ const MoneyManagement = () => {
                 </span>
               </button>
               
-              {activeCategories.map((item) => (
-                <div key={item.id}>
+              {activeCategories.map((item, index) => (
+                <div 
+                  key={item.id}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(index)}
+                  className={`group relative transition-all ${draggedItemIndex === index ? 'opacity-30 scale-95' : 'opacity-100'}`}
+                >
                   <button
                     onClick={() => setSelectedCategory(item.category)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === item.category ? 'bg-white/10 text-white shadow-md' : 'text-slate-400 hover:bg-white/5'}`}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-grab active:cursor-grabbing ${selectedCategory === item.category ? 'bg-white/10 text-white shadow-md' : 'text-slate-400 hover:bg-white/5'}`}
                   >
-                    <div className={`p-1.5 rounded-lg ${selectedCategory === item.category ? 'bg-white/10' : 'bg-white/5 ' + item.color}`}>
+                    <div className={`p-1.5 rounded-lg transition-colors ${selectedCategory === item.category ? 'bg-white/10' : 'bg-white/5 ' + item.color}`}>
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
                       </svg>
                     </div>
                     <span className="flex-1 text-left">{item.category}</span>
+                    
+                    {/* Drag Handle Indicator */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <MoreHorizontal size={14} className="text-slate-600 rotate-90" />
+                    </div>
                   </button>
                 </div>
               ))}
