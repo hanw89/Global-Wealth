@@ -1,7 +1,6 @@
 import React from 'react';
 import GlobalAssetList from './components/GlobalAssetList.jsx';
 import KoreanAssetList from './components/KoreanAssetList.jsx';
-import RentalTrackerForm from './components/RentalTrackerForm.jsx';
 import AddStockForm from './components/AddStockForm.jsx';
 import AddCryptoForm from './components/AddCryptoForm.jsx';
 import AddRentalForm from './components/AddRentalForm.jsx';
@@ -33,12 +32,6 @@ const AssetTracker = () => {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <GlobalAssetList />
         <KoreanAssetList />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-12">
-          <RentalTrackerForm />
-        </div>
       </div>
     </div>
   );
