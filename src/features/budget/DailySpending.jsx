@@ -4,6 +4,7 @@ import { formatCurrency } from '../../utils/currencyFormatter.js';
 import ExpenseLog from './components/ExpenseLog.jsx';
 import BudgetPieChart from './components/BudgetPieChart.jsx';
 import CategoryMonthlyView from './components/CategoryMonthlyView.jsx';
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal, RotateCcw } from 'lucide-react';
 import { DEFAULT_EXPENSES, DEFAULT_INCOME } from '../../utils/budgetDefaults.js';
 
@@ -101,6 +102,55 @@ const MoneyManagement = () => {
       .filter(t => t.type === activeTab)
       .reduce((acc, curr) => acc + curr.amountUsd, 0);
   }, [filteredTransactions, activeTab]);
+
+  const past6Months = useMemo(() => {
+    const months = [];
+    const d = new Date();
+    d.setMonth(d.getMonth() - 5);
+    for (let i = 0; i < 6; i++) {
+      months.push({
+        month: d.getMonth(),
+        year: d.getFullYear(),
+        label: d.toLocaleString('default', { month: 'short' })
+      });
+      d.setMonth(d.getMonth() + 1);
+    }
+    return months;
+  }, []);
+
+  const categoryHistory = useMemo(() => {
+    const history = {};
+    
+    activeCategories.forEach(cat => {
+      history[cat.category] = past6Months.map(m => ({ ...m, amount: 0 }));
+    });
+
+    transactions.forEach(t => {
+      const tDate = new Date(t.date);
+      const tMonth = tDate.getMonth();
+      const tYear = tDate.getFullYear();
+      const tCat = t.category.toString().trim();
+      
+      if (history[tCat]) {
+        const monthIndex = past6Months.findIndex(m => m.month === tMonth && m.year === tYear);
+        if (monthIndex > -1) {
+          history[tCat][monthIndex].amount += t.amountUsd;
+        }
+      }
+    });
+    return history;
+  }, [transactions, activeCategories, past6Months]);
+
+  const getHexColor = (colorClass) => {
+    if (colorClass.includes('emerald')) return '#10b981'; // emerald-500
+    if (colorClass.includes('blue')) return '#3b82f6'; // blue-500
+    if (colorClass.includes('indigo')) return '#6366f1'; // indigo-500
+    if (colorClass.includes('cyan')) return '#06b6d4'; // cyan-500
+    if (colorClass.includes('rose')) return '#f43f5e'; // rose-500
+    if (colorClass.includes('purple')) return '#a855f7'; // purple-500
+    if (colorClass.includes('green')) return '#22c55e'; // green-500
+    return '#64748b'; // slate-500
+  };
 
   const displayFormat = (amountUsd) => {
     if (isPrivacyMode) return currency === 'USD' ? '$X,XXX.XX' : '₩X,XXX,XXX';
@@ -335,6 +385,9 @@ const MoneyManagement = () => {
                 .filter(item => selectedCategory === 'All' || item.category === selectedCategory)
                 .map((item) => {
                   const monthlyAmount = monthlyCategoryTotals[item.category] || 0;
+                  const historyData = categoryHistory[item.category] || [];
+                  const averageUsage = historyData.length > 0 ? historyData.reduce((sum, h) => sum + h.amount, 0) / historyData.length : 0;
+
                   return (
                     <div key={item.id} className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all group relative shadow-inner">
                       <div className="flex items-center justify-between mb-4">
@@ -384,6 +437,28 @@ const MoneyManagement = () => {
                           className={`h-full rounded-full transition-all duration-1000 ${item.color.replace('text', 'bg')}`}
                           style={{ width: `${currentTotalUsd > 0 ? (monthlyAmount / currentTotalUsd * 100).toFixed(0) : 0}%` }}
                         ></div>
+                      </div>
+
+                      <div className="mt-4 pt-4 border-t border-white/5 relative">
+                        <div className="absolute top-4 right-0 text-right">
+                          <p className="text-[9px] text-slate-500 uppercase font-bold tracking-wider">6m Avg</p>
+                          <p className={`text-xs font-black text-white ${isPrivacyMode ? 'blur-sm select-none' : ''}`}>
+                            {displayFormat(averageUsage)}
+                          </p>
+                        </div>
+                        <div className="h-16 w-[70%]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={historyData}>
+                              <Line 
+                                type="monotone" 
+                                dataKey={isPrivacyMode ? "dummy" : "amount"} 
+                                stroke={getHexColor(item.color)} 
+                                strokeWidth={2} 
+                                dot={false} 
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        </div>
                       </div>
                     </div>
                   );
