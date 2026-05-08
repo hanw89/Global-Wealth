@@ -156,9 +156,11 @@ const GlobalAssetList = () => {
           <thead>
             <tr className="text-[10px] font-black uppercase tracking-widest text-slate-500">
               <th className="px-6 py-3 cursor-pointer" onClick={() => requestSort('alpha')}>Asset <SortIcon column="alpha" sortConfig={sortConfig} /></th>
-              <th className="px-6 py-3 text-right">Price</th>
+              <th className="px-6 py-3 text-right">Date</th>
+              <th className="px-6 py-3 text-right">Buy Price</th>
+              <th className="px-6 py-3 text-right">Market Price</th>
               <th className="px-6 py-3 text-right">24h</th>
-              <th className="px-6 py-3 text-right">Holdings</th>
+              <th className="px-6 py-3 text-right">Quantity</th>
               <th className="px-6 py-3 text-right">Value</th>
               <th className="px-6 py-3 text-right">Profit/Loss</th>
               <th className="px-6 py-3 text-center">Action</th>
@@ -167,7 +169,7 @@ const GlobalAssetList = () => {
           <tbody>
             {isLoading ? (
               [...Array(3)].map((_, i) => (
-                <tr key={i} className="animate-pulse bg-white/[0.02] rounded-xl"><td colSpan={7} className="h-16"></td></tr>
+                <tr key={i} className="animate-pulse bg-white/[0.02] rounded-xl"><td colSpan={9} className="h-16"></td></tr>
               ))
             ) : sortedData.map((item, idx) => (
               <tr key={idx} className="group relative transition-all hover:scale-[1.005]">
@@ -179,13 +181,18 @@ const GlobalAssetList = () => {
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getAssetColor(item.ticker, item.type) }} />
                       <span className="text-[10px] font-bold text-white">{item.ticker}</span>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-400">{item.type}</span>
-                      <span className="text-[9px] text-slate-600 font-mono">
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
+                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">{item.type}</span>
                   </div>
+                </td>
+
+                <td className="relative px-6 py-4 text-right z-10">
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </span>
+                </td>
+
+                <td className="relative px-6 py-4 text-right z-10 text-xs font-medium text-slate-300">
+                  {formatVal(item.avg_buy_price)}
                 </td>
 
                 <td className="relative px-6 py-4 text-right z-10 text-xs font-bold text-white">
