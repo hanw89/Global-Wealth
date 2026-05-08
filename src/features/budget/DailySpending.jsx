@@ -16,6 +16,7 @@ const MoneyManagement = () => {
   const [editingId, setEditingId] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedChartPoint, setSelectedChartPoint] = useState(null);
 
   // Load from LocalStorage
   const [expenseCategories, setExpenseCategories] = useState(() => {
@@ -103,26 +104,24 @@ const MoneyManagement = () => {
       .reduce((acc, curr) => acc + curr.amountUsd, 0);
   }, [filteredTransactions, activeTab]);
 
-  const past6Months = useMemo(() => {
+  const yearHistory = useMemo(() => {
     const months = [];
-    const d = new Date();
-    d.setMonth(d.getMonth() - 5);
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(selectedYear, i, 1);
       months.push({
-        month: d.getMonth(),
-        year: d.getFullYear(),
+        month: i,
+        year: selectedYear,
         label: d.toLocaleString('default', { month: 'short' })
       });
-      d.setMonth(d.getMonth() + 1);
     }
     return months;
-  }, []);
+  }, [selectedYear]);
 
   const categoryHistory = useMemo(() => {
     const history = {};
     
     activeCategories.forEach(cat => {
-      history[cat.category] = past6Months.map(m => ({ ...m, amount: 0 }));
+      history[cat.category] = yearHistory.map(m => ({ ...m, amount: 0 }));
     });
 
     transactions.forEach(t => {
@@ -131,15 +130,15 @@ const MoneyManagement = () => {
       const tYear = tDate.getFullYear();
       const tCat = t.category.toString().trim();
       
-      if (history[tCat]) {
-        const monthIndex = past6Months.findIndex(m => m.month === tMonth && m.year === tYear);
+      if (history[tCat] && tYear === selectedYear) {
+        const monthIndex = yearHistory.findIndex(m => m.month === tMonth);
         if (monthIndex > -1) {
           history[tCat][monthIndex].amount += t.amountUsd;
         }
       }
     });
     return history;
-  }, [transactions, activeCategories, past6Months]);
+  }, [transactions, activeCategories, yearHistory, selectedYear]);
 
   const getHexColor = (colorClass) => {
     if (colorClass.includes('emerald')) return '#10b981'; // emerald-500
@@ -454,7 +453,31 @@ const MoneyManagement = () => {
                                 dataKey={isPrivacyMode ? "dummy" : "amount"} 
                                 stroke={getHexColor(item.color)} 
                                 strokeWidth={2} 
-                                dot={false} 
+                                dot={{ 
+                                  r: 3, 
+                                  fill: '#0f172a', 
+                                  stroke: getHexColor(item.color), 
+                                  strokeWidth: 2, 
+                                  cursor: 'pointer',
+                                  onClick: (e, payload) => {
+                                    const data = payload?.payload || payload || e?.payload;
+                                    if (data && data.month !== undefined) {
+                                      setSelectedChartPoint({ category: item.category, ...data });
+                                    }
+                                  }
+                                }}
+                                activeDot={{ 
+                                  r: 5, 
+                                  fill: getHexColor(item.color), 
+                                  stroke: '#fff', 
+                                  cursor: 'pointer',
+                                  onClick: (e, payload) => {
+                                    const data = payload?.payload || payload || e?.payload;
+                                    if (data && data.month !== undefined) {
+                                      setSelectedChartPoint({ category: item.category, ...data });
+                                    }
+                                  }
+                                }}
                               />
                             </LineChart>
                           </ResponsiveContainer>
@@ -505,6 +528,52 @@ const MoneyManagement = () => {
           </div>
         </main>
       </div>
+
+      {/* Transaction Details Modal */}
+      {selectedChartPoint && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-white/10 rounded-3xl p-6 w-full max-w-lg shadow-2xl relative">
+            <button 
+              onClick={() => setSelectedChartPoint(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 className="text-xl font-bold text-white mb-1">{selectedChartPoint.category} Transactions</h3>
+            <p className="text-xs text-slate-400 font-medium mb-6 uppercase tracking-wider">
+              {selectedChartPoint.label} {selectedChartPoint.year}
+            </p>
+            
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+              {transactions
+                .filter(t => {
+                  const d = new Date(t.date);
+                  return t.category === selectedChartPoint.category && d.getMonth() === selectedChartPoint.month && d.getFullYear() === selectedChartPoint.year;
+                })
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map(t => (
+                  <div key={t.id} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
+                    <div>
+                      <p className="text-sm font-bold text-white">{t.description}</p>
+                      <p className="text-[10px] text-slate-500">{t.date}</p>
+                    </div>
+                    <p className={`text-sm font-black ${t.type === 'Expense' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                      {t.type === 'Expense' ? '-' : '+'}{displayFormat(t.amountUsd)}
+                    </p>
+                  </div>
+                ))}
+              {transactions.filter(t => {
+                  const d = new Date(t.date);
+                  return t.category === selectedChartPoint.category && d.getMonth() === selectedChartPoint.month && d.getFullYear() === selectedChartPoint.year;
+                }).length === 0 && (
+                  <div className="text-center py-10 opacity-50">
+                    <p className="text-sm text-slate-400">No transactions found for this month.</p>
+                  </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
