@@ -1,17 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabaseClient';
-import { Loader2, Zap, Save } from 'lucide-react';
+import { Loader2, Zap, Save, Repeat } from 'lucide-react';
+import { useRecurringInvestments } from '../../../hooks/useRecurringInvestments';
 
 const AddCryptoForm = () => {
   const queryClient = useQueryClient();
   const { register, handleSubmit, reset } = useForm();
+  const { addPlan } = useRecurringInvestments();
+  const [isRecurring, setIsRecurring] = useState(false);
 
   const mutation = useMutation({
     mutationFn: async (data) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
+
+      if (isRecurring) {
+        addPlan({
+          type: 'Crypto',
+          ticker: data.symbol.toUpperCase(),
+          quantity: parseFloat(data.quantity),
+          price: parseFloat(data.purchasePrice),
+          frequency: data.frequency,
+          name: `${data.symbol.toUpperCase()} Auto-buy`
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('assets')
@@ -30,7 +45,8 @@ const AddCryptoForm = () => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-unified'] });
       queryClient.refetchQueries({ queryKey: ['portfolio-unified'] });
       reset();
-      alert('Crypto ledger updated.');
+      setIsRecurring(false);
+      alert(isRecurring ? 'Recurring crypto plan registered.' : 'Crypto ledger updated.');
     },
     onError: (error) => {
       console.error('Crypto Sync Error:', error);
@@ -40,11 +56,21 @@ const AddCryptoForm = () => {
 
   return (
     <div className="p-6 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] shadow-2xl">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
-          <Zap size={18} />
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+            <Zap size={18} />
+          </div>
+          <h3 className="font-bold text-white uppercase text-xs tracking-widest">Add Digital Asset</h3>
         </div>
-        <h3 className="font-bold text-white uppercase text-xs tracking-widest">Add Digital Asset</h3>
+        <button 
+          type="button"
+          onClick={() => setIsRecurring(!isRecurring)}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${isRecurring ? 'bg-orange-500 text-white' : 'bg-white/5 text-slate-500 border border-white/5 hover:bg-white/10'}`}
+        >
+          <Repeat size={12} />
+          {isRecurring ? 'Recurring On' : 'Recurring Off'}
+        </button>
       </div>
 
       <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
@@ -80,22 +106,37 @@ const AddCryptoForm = () => {
           />
         </div>
 
-        <div>
-          <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1">Purchase Date</label>
-          <input
-            {...register('purchaseDate', { required: true })}
-            type="date"
-            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
-          />
-        </div>
+        {isRecurring ? (
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1">Frequency</label>
+            <select
+              {...register('frequency', { required: isRecurring })}
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all appearance-none"
+            >
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="biweekly">Bi-weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+        ) : (
+          <div>
+            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5 px-1">Purchase Date</label>
+            <input
+              {...register('purchaseDate', { required: !isRecurring })}
+              type="date"
+              className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
+            />
+          </div>
+        )}
 
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 shadow-lg shadow-orange-500/20"
+          className={`w-full flex items-center justify-center gap-2 font-bold py-3 rounded-xl transition-all disabled:opacity-50 shadow-lg ${isRecurring ? 'bg-orange-500 hover:bg-orange-400 shadow-orange-500/30' : 'bg-orange-600 hover:bg-orange-500 shadow-orange-500/20'} text-white`}
         >
           {mutation.isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-          <span>Sync Crypto Ledger</span>
+          <span>{isRecurring ? 'Schedule Auto-Buy' : 'Sync Crypto Ledger'}</span>
         </button>
       </form>
     </div>

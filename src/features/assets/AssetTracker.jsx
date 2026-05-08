@@ -4,9 +4,14 @@ import KoreanAssetList from './components/KoreanAssetList.jsx';
 import AddStockForm from './components/AddStockForm.jsx';
 import AddCryptoForm from './components/AddCryptoForm.jsx';
 import AddRentalForm from './components/AddRentalForm.jsx';
+import RecurringPlans from './components/RecurringPlans.jsx';
+import { useRecurringInvestments } from '../../hooks/useRecurringInvestments';
 import { Activity } from 'lucide-react';
 
 const AssetTracker = () => {
+  // Initialize recurring execution engine
+  useRecurringInvestments();
+
   return (
     <div className="mx-auto max-w-7xl space-y-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
@@ -28,6 +33,9 @@ const AssetTracker = () => {
           <AddRentalForm />
         </div>
       </section>
+
+      {/* Recurring Engine Status & Plans */}
+      <RecurringPlans />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
         <GlobalAssetList />
