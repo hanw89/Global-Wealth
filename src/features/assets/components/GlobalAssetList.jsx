@@ -42,41 +42,26 @@ const GlobalAssetList = () => {
   const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
   
   const dbAssets = useMemo(() => {
-    const rawAssets = portfolio?.dbAssets?.filter(a => a.type === 'Stock' || a.type === 'Crypto') || [];
-    const grouped = rawAssets.reduce((acc, asset) => {
-      const key = `${asset.type}_${asset.ticker.toUpperCase()}`;
-      if (!acc[key]) {
-        acc[key] = { ...asset, quantity: 0, totalCost: 0, ids: [] };
-      }
-      acc[key].quantity += asset.quantity;
-      acc[key].totalCost += asset.quantity * (asset.avg_buy_price || 0);
-      acc[key].ids.push(asset.id);
-      return acc;
-    }, {});
-
-    return Object.values(grouped).map(asset => ({
-      ...asset,
-      avg_buy_price: asset.quantity > 0 ? asset.totalCost / asset.quantity : 0
-    }));
+    return portfolio?.dbAssets?.filter(a => a.type === 'Stock' || a.type === 'Crypto') || [];
   }, [portfolio]);
 
-  const stockTickers = useMemo(() => dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker), [dbAssets]);
-  const cryptoIds = useMemo(() => dbAssets.filter(a => a.type === 'Crypto').map(a => {
+  const stockTickers = useMemo(() => [...new Set(dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker))], [dbAssets]);
+  const cryptoIds = useMemo(() => [...new Set(dbAssets.filter(a => a.type === 'Crypto').map(a => {
     const t = a.ticker.toLowerCase();
     if (t === 'btc') return 'bitcoin';
     if (t === 'eth') return 'ethereum';
     if (t === 'sol') return 'solana';
     return t;
-  }), [dbAssets]);
+  }))], [dbAssets]);
 
   const { data: marketData, isLoading: isMarketLoading } = useMarketData(stockTickers, cryptoIds);
 
   const deleteMutation = useMutation({
-    mutationFn: async (ids) => {
+    mutationFn: async (id) => {
       const { error } = await supabase
         .from('assets')
         .delete()
-        .in('id', ids);
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -194,7 +179,12 @@ const GlobalAssetList = () => {
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getAssetColor(item.ticker, item.type) }} />
                       <span className="text-[10px] font-bold text-white">{item.ticker}</span>
                     </div>
-                    <span className="text-xs font-medium text-slate-400">{item.type}</span>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-slate-400">{item.type}</span>
+                      <span className="text-[9px] text-slate-600 font-mono">
+                        {new Date(item.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
                   </div>
                 </td>
 
@@ -231,13 +221,13 @@ const GlobalAssetList = () => {
                 <td className="relative px-6 py-4 text-center z-10">
                   <button 
                     onClick={() => {
-                      if (window.confirm(`Delete all ${item.quantity} ${item.ticker} holdings?`)) {
-                        deleteMutation.mutate(item.ids);
+                      if (window.confirm(`Delete this ${item.ticker} entry (${item.quantity} units)?`)) {
+                        deleteMutation.mutate(item.id);
                       }
                     }}
                     className="p-1.5 rounded-lg text-slate-500 hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
                   >
-                    {deleteMutation.isPending && deleteMutation.variables?.includes(item.ids[0]) ? (
+                    {deleteMutation.isPending && deleteMutation.variables === item.id ? (
                       <Loader2 size={14} className="animate-spin" />
                     ) : (
                       <Trash2 size={14} />
