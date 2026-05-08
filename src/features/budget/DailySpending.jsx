@@ -62,6 +62,14 @@ const MoneyManagement = () => {
 
   const activeCategories = activeTab === 'Expense' ? expenseCategories : incomeCategories;
 
+  const setActiveCategories = (newList) => {
+    if (activeTab === 'Expense') {
+      setExpenseCategories(newList);
+    } else {
+      setIncomeCategories(newList);
+    }
+  };
+
   // Monthly Filter Logic
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
