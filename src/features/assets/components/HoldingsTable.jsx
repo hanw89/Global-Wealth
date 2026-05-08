@@ -37,7 +37,24 @@ const HoldingsTable = () => {
 
   const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
   
-  const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
+  const dbAssets = useMemo(() => {
+    const rawAssets = portfolio?.dbAssets || [];
+    // Group by ticker and type to combine holdings
+    const grouped = rawAssets.reduce((acc, asset) => {
+      const key = `${asset.type}_${asset.ticker.toUpperCase()}`;
+      if (!acc[key]) {
+        acc[key] = { ...asset, quantity: 0, totalCost: 0 };
+      }
+      acc[key].quantity += asset.quantity;
+      acc[key].totalCost += asset.quantity * (asset.avg_buy_price || 0);
+      return acc;
+    }, {});
+
+    return Object.values(grouped).map(asset => ({
+      ...asset,
+      avg_buy_price: asset.quantity > 0 ? asset.totalCost / asset.quantity : 0
+    }));
+  }, [portfolio]);
 
   const stockTickers = useMemo(() => dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker), [dbAssets]);
   const cryptoIds = useMemo(() => dbAssets.filter(a => a.type === 'Crypto').map(a => {
