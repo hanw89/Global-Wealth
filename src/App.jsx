@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation, Outlet } from 'react-router-dom';
-import AssetTracker from './features/assets/AssetTracker.jsx';
-import MoneyManagement from './features/budget/DailySpending.jsx';
-import Settings from './components/Settings.jsx';
-import Dashboard from './features/dashboard/Dashboard.jsx';
-import Login from './components/Login.jsx';
 import { useAppContext } from './context/AppContext.js';
 import { supabase } from './lib/supabaseClient';
 import { Eye, EyeOff, LogOut, Menu } from 'lucide-react';
+
+// Lazy load route components for code splitting
+const AssetTracker = lazy(() => import('./features/assets/AssetTracker.jsx'));
+const MoneyManagement = lazy(() => import('./features/budget/DailySpending.jsx'));
+const Settings = lazy(() => import('./components/Settings.jsx'));
+const Dashboard = lazy(() => import('./features/dashboard/Dashboard.jsx'));
+const Login = lazy(() => import('./components/Login.jsx'));
 
 const ProtectedRoute = () => {
   const [session, setSession] = useState(null);
@@ -116,18 +118,24 @@ const Layout = () => {
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/assets" element={<AssetTracker />} />
-          <Route path="/money-management" element={<MoneyManagement />} />
-          <Route path="/settings" element={<Settings />} />
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/assets" element={<AssetTracker />} />
+            <Route path="/money-management" element={<MoneyManagement />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
         </Route>
-      </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 };
 
