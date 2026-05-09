@@ -6,8 +6,8 @@ import { fetchCryptoPrices, fetchStockPrices } from '../../../services/marketSer
  */
 
 export const getPortfolioValue = async (holdings) => {
-  const stockTickers = holdings.filter(h => h.type === 'stock').map(h => h.ticker);
-  const cryptoIds = holdings.filter(h => h.type === 'crypto').map(h => h.id);
+  const stockTickers = holdings.filter(h => h.type.toLowerCase() === 'stock').map(h => h.ticker);
+  const cryptoIds = holdings.filter(h => h.type.toLowerCase() === 'crypto').map(h => h.id || h.ticker.toLowerCase());
 
   try {
     const [cryptoData, stockData] = await Promise.all([

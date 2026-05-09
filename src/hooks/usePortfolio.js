@@ -27,8 +27,8 @@ export const usePortfolio = (globalExchangeRate) => {
       const dbRentals = rentalsResponse.data || [];
 
       // 3. Parallel Fetch: Market Data
-      const stockTickers = dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker);
-      const cryptoTickers = dbAssets.filter(a => a.type === 'Crypto').map(a => a.ticker.toLowerCase());
+      const stockTickers = dbAssets.filter(a => a.type.toLowerCase() === 'stock').map(a => a.ticker);
+      const cryptoTickers = dbAssets.filter(a => a.type.toLowerCase() === 'crypto').map(a => a.ticker.toLowerCase());
 
       // Note: Mapping tickers to CoinGecko IDs if necessary (simplified for this hook)
       const cryptoIds = cryptoTickers.map(t => {
@@ -52,10 +52,12 @@ export const usePortfolio = (globalExchangeRate) => {
 
       // Calculate Assets
       dbAssets.forEach(asset => {
-        if (asset.type === 'Stock') {
-          const price = stockPrices?.[asset.ticker]?.price || 0;
+        const type = asset.type.toLowerCase();
+        if (type === 'stock') {
+          // Key might be original ticker or normalized uppercase
+          const price = (stockPrices?.[asset.ticker] || stockPrices?.[asset.ticker.toUpperCase()])?.price || 0;
           stockValue += price * (asset.quantity || 0);
-        } else if (asset.type === 'Crypto') {
+        } else if (type === 'crypto') {
           // Normalize CoinGecko response
           const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
                      asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : 
@@ -83,7 +85,7 @@ export const usePortfolio = (globalExchangeRate) => {
         lastUpdated: new Date().toISOString()
       };
     },
-    refetchInterval: 60000, // Sync every minute
-    staleTime: 55000,
+    refetchInterval: 21600000, // 6 hours
+    staleTime: 21500000,
   });
 };

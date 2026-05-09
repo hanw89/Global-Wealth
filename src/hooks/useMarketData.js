@@ -20,9 +20,10 @@ export const useMarketData = (stockTickers = [], cryptoIds = []) => {
         timestamp: new Date().toISOString(),
       };
     },
-    // Senior Implementation: Polling every 60 seconds
-    refetchInterval: 60000, 
+    // Senior Implementation: Polling every 6 hours (21600000 ms)
+    refetchInterval: 21600000, 
     // Optimization: Keep previous data while fetching to prevent UI flickering
+    staleTime: 21500000,
     placeholderData: (previousData) => previousData,
   });
 };

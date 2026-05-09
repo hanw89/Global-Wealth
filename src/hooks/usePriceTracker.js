@@ -21,8 +21,8 @@ export const usePriceTracker = (options = { stocks: ['AAPL', 'TSLA', 'NVDA', 'VO
         stocks: stockData || {}
       };
     },
-    refetchInterval: 60000, // 60 seconds
-    staleTime: 55000,
+    refetchInterval: 21600000, // 6 hours
+    staleTime: 21500000,
   });
 
   return { 

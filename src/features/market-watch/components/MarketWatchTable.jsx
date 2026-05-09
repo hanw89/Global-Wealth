@@ -11,10 +11,10 @@ const MarketWatchTable = () => {
   
   const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
 
-  const stockTickers = useMemo(() => dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker), [dbAssets]);
-  const cryptoIds = useMemo(() => dbAssets.filter(a => a.type === 'Crypto').map(a => {
+  const stockTickers = useMemo(() => dbAssets.filter(a => a.type.toLowerCase() === 'stock').map(a => a.ticker), [dbAssets]);
+  const cryptoIds = useMemo(() => dbAssets.filter(a => a.type.toLowerCase() === 'crypto').map(a => {
     const t = a.ticker.toLowerCase();
-    if (t === 'btc') return 'bitcoin';
+    if (t === 'btc' || t === 'btc.crypto') return 'bitcoin';
     if (t === 'eth') return 'ethereum';
     if (t === 'sol') return 'solana';
     return t;
@@ -38,10 +38,12 @@ const MarketWatchTable = () => {
   const processedHoldings = useMemo(() => {
     return dbAssets.map(asset => {
       let priceData;
-      if (asset.type === 'Stock') {
+      const assetType = asset.type.toLowerCase();
+      if (assetType === 'stock') {
+        // Handle hybrid tickers like BTC.CRYPTO which are redirected in service
         priceData = marketData?.stocks?.[asset.ticker];
       } else {
-        const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
+        const id = asset.ticker.toLowerCase() === 'btc' || asset.ticker.toLowerCase() === 'btc.crypto' ? 'bitcoin' : 
                    asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : 
                    asset.ticker.toLowerCase() === 'sol' ? 'solana' : asset.ticker.toLowerCase();
         priceData = marketData?.cryptos?.[id];
@@ -71,8 +73,8 @@ const MarketWatchTable = () => {
 
   const totalValue = processedHoldings.reduce((sum, h) => sum + h.value, 0);
   const cryptoVolatility = processedHoldings
-    .filter(h => h.type === 'crypto')
-    .reduce((acc, h, _, arr) => acc + (h.change / arr.length), 0);
+    .filter(h => h.type.toLowerCase() === 'crypto')
+    .reduce((acc, h, _, arr) => acc + (h.change / (arr.length || 1)), 0);
   
   const isVolatile = Math.abs(cryptoVolatility) > 5;
 

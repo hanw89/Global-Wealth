@@ -9,9 +9,9 @@ export const useExchangeRate = () => {
   return useQuery({
     queryKey: ['exchange-rate-live'],
     queryFn: fetchExchangeRate,
-    // Senior Implementation: Polling every 1 hour (3600000 ms)
-    refetchInterval: 3600000, 
-    staleTime: 3500000,
+    // Senior Implementation: Polling every 12 hours (43200000 ms)
+    refetchInterval: 43200000, 
+    staleTime: 43100000,
     refetchOnWindowFocus: true,
   });
 };

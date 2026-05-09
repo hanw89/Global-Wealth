@@ -4,9 +4,23 @@ import { formatCurrency } from '../../utils/currencyFormatter.js';
 import ExpenseLog from './components/ExpenseLog.jsx';
 import BudgetPieChart from './components/BudgetPieChart.jsx';
 import CategoryMonthlyView from './components/CategoryMonthlyView.jsx';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 import { Plus, Wallet, TrendingUp, TrendingDown, MoreHorizontal, RotateCcw } from 'lucide-react';
 import { DEFAULT_EXPENSES, DEFAULT_INCOME } from '../../utils/budgetDefaults.js';
+
+const CustomTooltip = ({ active, payload, label, isPrivacyMode, displayFormat }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 p-3 rounded-xl shadow-2xl">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">{label} {payload[0].payload.year}</p>
+        <p className="text-sm font-black text-white">
+          {isPrivacyMode ? 'Masked' : displayFormat(payload[0].value)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const MoneyManagement = () => {
   const { currency, exchangeRate, convertAmount, theme } = useAppContext();
@@ -106,16 +120,18 @@ const MoneyManagement = () => {
 
   const yearHistory = useMemo(() => {
     const months = [];
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(selectedYear, i, 1);
+    const today = new Date();
+    // Rolling 12 months ending with the current month
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
       months.push({
-        month: i,
-        year: selectedYear,
+        month: d.getMonth(),
+        year: d.getFullYear(),
         label: d.toLocaleString('default', { month: 'short' })
       });
     }
     return months;
-  }, [selectedYear]);
+  }, []); // Static rolling 12 months based on "now"
 
   const categoryHistory = useMemo(() => {
     const history = {};
@@ -130,15 +146,16 @@ const MoneyManagement = () => {
       const tYear = tDate.getFullYear();
       const tCat = t.category.toString().trim();
       
-      if (history[tCat] && tYear === selectedYear) {
-        const monthIndex = yearHistory.findIndex(m => m.month === tMonth);
+      if (history[tCat]) {
+        // Match both month and year for rolling history
+        const monthIndex = yearHistory.findIndex(m => m.month === tMonth && m.year === tYear);
         if (monthIndex > -1) {
           history[tCat][monthIndex].amount += t.amountUsd;
         }
       }
     });
     return history;
-  }, [transactions, activeCategories, yearHistory, selectedYear]);
+  }, [transactions, activeCategories, yearHistory]);
 
   const getHexColor = (colorClass) => {
     if (colorClass.includes('emerald')) return '#10b981'; // emerald-500
@@ -447,7 +464,14 @@ const MoneyManagement = () => {
                         </div>
                         <div className="h-16 w-[70%]">
                           <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={historyData}>
+                            <LineChart 
+                              data={historyData}
+                              margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                            >
+                              <Tooltip 
+                                content={<CustomTooltip isPrivacyMode={isPrivacyMode} displayFormat={displayFormat} />}
+                                cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+                              />
                               <Line 
                                 type="monotone" 
                                 dataKey={isPrivacyMode ? "dummy" : "amount"} 
@@ -459,12 +483,6 @@ const MoneyManagement = () => {
                                   stroke: getHexColor(item.color), 
                                   strokeWidth: 2, 
                                   cursor: 'pointer',
-                                  onClick: (e, payload) => {
-                                    const data = payload?.payload || payload || e?.payload;
-                                    if (data && data.month !== undefined) {
-                                      setSelectedChartPoint({ category: item.category, ...data });
-                                    }
-                                  }
                                 }}
                                 activeDot={{ 
                                   r: 5, 
