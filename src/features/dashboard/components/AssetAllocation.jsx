@@ -30,32 +30,20 @@ const AssetAllocation = () => {
   const { privacyMode, exchangeRate } = useAppContext();
   const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
 
-  const stockTickers = useMemo(() => portfolio?.dbAssets?.filter(a => a.type === 'Stock').map(a => a.ticker) || [], [portfolio]);
-  const cryptoIds = useMemo(() => portfolio?.dbAssets?.filter(a => a.type === 'Crypto').map(a => {
-    const t = a.ticker.toLowerCase();
-    if (t === 'btc') return 'bitcoin';
-    if (t === 'eth') return 'ethereum';
-    return t;
-  }) || [], [portfolio]);
-
-  const { data: marketData, isLoading: isMarketLoading } = useMarketData(stockTickers, cryptoIds);
-
-  const isLoading = isPortfolioLoading || isMarketLoading;
+  const isLoading = isPortfolioLoading;
 
   const allocationData = useMemo(() => {
-    if (!portfolio || !marketData) return [];
+    if (!portfolio) return [];
 
     let stockVal = 0;
     let cryptoVal = 0;
     
     portfolio.dbAssets?.forEach(asset => {
-      if (asset.type === 'Stock') {
-        const price = marketData.stocks?.[asset.ticker]?.price || 0;
+      const type = (asset.type || '').toLowerCase();
+      const price = asset.current_price || 0;
+      if (type === 'stock') {
         stockVal += price * asset.quantity;
-      } else if (asset.type === 'Crypto') {
-        const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
-                   asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : asset.ticker.toLowerCase();
-        const price = marketData.cryptos?.[id]?.usd || 0;
+      } else if (type === 'crypto') {
         cryptoVal += price * asset.quantity;
       }
     });
@@ -75,7 +63,8 @@ const AssetAllocation = () => {
       { name: 'Crypto', value: cryptoVal, percent: (cryptoVal / total) * 100 },
       { name: 'RealEstate', value: realEstateVal, percent: (realEstateVal / total) * 100 }
     ];
-  }, [portfolio, marketData]);
+  }, [portfolio]);
+
 
   const rebalanceAdvice = useMemo(() => {
     if (!allocationData.length) return null;

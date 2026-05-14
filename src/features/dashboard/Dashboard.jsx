@@ -15,8 +15,8 @@ import {
   Globe
 } from 'lucide-react';
 import { usePortfolio } from '../../hooks/usePortfolio.js';
-import { usePriceTracker } from '../../hooks/usePriceTracker.js';
 import CashFlowChart from './components/CashFlowChart.jsx';
+
 import CashFlowSummary from './components/CashFlowSummary.jsx';
 import ForexAnalyzer from './components/ForexAnalyzer.jsx';
 import AssetAllocation from './components/AssetAllocation.jsx';
@@ -29,33 +29,52 @@ import { formatCurrency } from '../../utils/currencyFormatter.js';
 import { exportToCSV } from '../../utils/exportUtils.js';
 
 const Dashboard = () => {
-  const { privacyMode, exchangeRate, rateLastUpdated } = useAppContext();
+  const { privacyMode, exchangeRate, rateLastUpdated, isSyncing, marketLastUpdated } = useAppContext();
   const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
-  const { prices, lastUpdated, loading: isPricesLoading, error, refresh } = usePriceTracker({
-    stocks: [],
-    cryptos: ['bitcoin', 'ethereum']
-  });
+  
+  // Extract assets for calculations
+  const dbAssets = portfolio?.dbAssets || [];
+  
+  // We only block the Dashboard UI if DB is loading.
+  const loading = isPortfolioLoading;
+  const lastUpdated = marketLastUpdated;
 
-  const loading = isPortfolioLoading || isPricesLoading;
 
   const formatUSD = (val) => formatCurrency(val, 'USD', { privacyMode });
   const formatKRW = (val) => formatCurrency(val, 'KRW', { privacyMode });
 
-  // Calculate values based on live data
-  const totalNetWorth = portfolio?.totalValue || 0;
+  // Calculate values based on DB cached data (Immediate render!)
+  const totalNetWorth = React.useMemo(() => {
+    let stockValue = 0;
+    let cryptoValue = 0;
+    dbAssets.forEach(asset => {
+      const type = (asset.type || '').toLowerCase();
+      const price = asset.current_price || 0;
+      if (type === 'stock') {
+        stockValue += price * (asset.quantity || 0);
+      } else if (type === 'crypto') {
+        cryptoValue += price * (asset.quantity || 0);
+      }
+    });
+    return stockValue + cryptoValue;
+  }, [dbAssets]);
+
   const totalRentUsd = portfolio?.monthlyCashFlow || 0;
   const exchangeRateUsed = portfolio?.exchangeRateUsed || exchangeRate;
 
   // Fintech Feature: Tax Projections (15% Capital Gains)
   const estimatedCapitalGainsTax = totalNetWorth * 0.15;
 
-  const bitcoinPrice = prices.cryptos.bitcoin?.usd || 0;
-  const bitcoinChange = prices.cryptos.bitcoin?.usd_24h_change || 0;
+  // Find Bitcoin in dbAssets for the top-level card
+  const bitcoinAsset = dbAssets.find(a => (a.ticker || '').toUpperCase() === 'BTC');
+  const bitcoinPrice = bitcoinAsset?.current_price || 0;
+  const bitcoinChange = bitcoinAsset?.price_change_24h || 0;
 
   const handleTaxExport = () => {
     const exportData = [];
     exportToCSV(exportData, `GlobalWealth_Tax_Report_${new Date().toISOString().split('T')[0]}.csv`);
   };
+
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 font-sans">
@@ -80,19 +99,23 @@ const Dashboard = () => {
             {lastUpdated && (
               <div className="flex items-center gap-1.5">
                 <Clock size={12} />
-                <span>Last Updated: {lastUpdated.toLocaleTimeString()}</span>
+                <span>Last Sync: {lastUpdated.toLocaleTimeString()}</span>
               </div>
             )}
-            {error && <span className="text-rose-500 font-black">Error: {error}</span>}
+            <div className="flex items-center gap-1.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
+              <span>{isSyncing ? 'Background Syncing' : 'Cache Optimized'}</span>
+            </div>
           </div>
           <button 
-            onClick={refresh}
+            onClick={() => window.location.reload()}
             className="flex items-center gap-1.5 hover:text-white transition-colors"
           >
-            <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
+            <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
+            <span>Force Update</span>
           </button>
         </div>
+
 
         {/* Top Row: Bento Box Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

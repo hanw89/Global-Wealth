@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useExchangeRate } from '../hooks/useExchangeRate.js';
+import { usePortfolio } from '../hooks/usePortfolio.js';
+import { useMarketData } from '../hooks/useMarketData.js';
 import { AppContext } from './AppContext.js';
 
 export const AppProvider = ({ children }) => {
@@ -7,9 +9,17 @@ export const AppProvider = ({ children }) => {
   const [currency, setCurrency] = useState(localStorage.getItem('app-currency') || 'USD');
   const [privacyMode, setPrivacyMode] = useState(false);
 
-  // Live Exchange Rate Synchronization
+  // 1. Live Exchange Rate Synchronization
   const { data: liveRate, dataUpdatedAt: rateLastUpdated } = useExchangeRate();
-  const exchangeRate = liveRate || 1350; // Fallback to baseline
+  const exchangeRate = liveRate || 1350; 
+
+  // 2. Global Portfolio Fetch (Used for background sync)
+  const { data: portfolio } = usePortfolio(exchangeRate);
+  const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
+
+  // 3. Global Background Market Data Sync Worker
+  // This hook now acts as a singleton background worker
+  const { isSyncing, lastUpdated: marketLastUpdated } = useMarketData(dbAssets);
 
   useEffect(() => {
     localStorage.setItem('app-theme', theme);
@@ -45,9 +55,12 @@ export const AppProvider = ({ children }) => {
       rateLastUpdated,
       convertAmount,
       privacyMode,
-      togglePrivacyMode
+      togglePrivacyMode,
+      isSyncing,
+      marketLastUpdated
     }}>
       {children}
     </AppContext.Provider>
   );
 };
+

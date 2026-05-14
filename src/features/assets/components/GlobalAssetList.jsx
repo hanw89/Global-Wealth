@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../../../context/AppContext.js';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
-import { useMarketData } from '../../../hooks/useMarketData.js';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { supabase } from '../../../lib/supabaseClient';
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 
@@ -45,16 +45,6 @@ const GlobalAssetList = () => {
     return portfolio?.dbAssets?.filter(a => a.type === 'Stock' || a.type === 'Crypto') || [];
   }, [portfolio]);
 
-  const stockTickers = useMemo(() => [...new Set(dbAssets.filter(a => a.type === 'Stock').map(a => a.ticker))], [dbAssets]);
-  const cryptoIds = useMemo(() => [...new Set(dbAssets.filter(a => a.type === 'Crypto').map(a => {
-    const t = a.ticker.toLowerCase();
-    if (t === 'btc') return 'bitcoin';
-    if (t === 'eth') return 'ethereum';
-    if (t === 'sol') return 'solana';
-    return t;
-  }))], [dbAssets]);
-
-  const { data: marketData, isLoading: isMarketLoading } = useMarketData(stockTickers, cryptoIds);
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
@@ -72,27 +62,14 @@ const GlobalAssetList = () => {
     }
   });
 
-  const isLoading = isPortfolioLoading || isMarketLoading;
+  const isLoading = isPortfolioLoading;
 
   const formatVal = (val, cur = 'USD') => formatCurrency(val, cur, { privacyMode });
 
   const tableData = useMemo(() => {
     return dbAssets.map(asset => {
-      let priceData;
-      if (asset.type === 'Stock') {
-        priceData = marketData?.stocks?.[asset.ticker];
-      } else {
-        const id = asset.ticker.toLowerCase() === 'btc' ? 'bitcoin' : 
-                   asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : 
-                   asset.ticker.toLowerCase() === 'sol' ? 'solana' : asset.ticker.toLowerCase();
-        priceData = marketData?.cryptos?.[id];
-        if (priceData && !priceData.price) {
-          priceData = { price: priceData.usd, change: priceData.usd_24h_change };
-        }
-      }
-
-      const currentPrice = priceData?.price || 0;
-      const change24h = priceData?.change || 0;
+      const currentPrice = asset.current_price || 0;
+      const change24h = asset.price_change_24h || 0;
       const totalValue = currentPrice * asset.quantity;
       const costBasis = (asset.avg_buy_price || 0) * asset.quantity;
       const profitLoss = totalValue - costBasis;
@@ -108,7 +85,8 @@ const GlobalAssetList = () => {
         profitLossPercent
       };
     });
-  }, [dbAssets, marketData]);
+  }, [dbAssets]);
+
 
   const sortedData = useMemo(() => {
     let sortableItems = [...tableData];

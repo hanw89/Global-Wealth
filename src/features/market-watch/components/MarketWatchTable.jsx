@@ -1,64 +1,28 @@
 import React, { useMemo } from 'react';
 import { AlertCircle, ArrowUpRight, ArrowDownRight, RefreshCw, Zap, Clock } from 'lucide-react';
-import { useMarketData } from '../../../hooks/useMarketData.js';
 import { usePortfolio } from '../../../hooks/usePortfolio.js';
+
 import { formatCurrency } from '../../../utils/currencyFormatter.js';
 import { useAppContext } from '../../../context/AppContext.js';
 
 const MarketWatchTable = () => {
-  const { privacyMode, exchangeRate } = useAppContext();
+  const { privacyMode, exchangeRate, isSyncing, marketLastUpdated } = useAppContext();
   const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
   
   const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
 
-  const stockTickers = useMemo(() => dbAssets.filter(a => a.type.toLowerCase() === 'stock').map(a => a.ticker), [dbAssets]);
-  const cryptoIds = useMemo(() => dbAssets.filter(a => a.type.toLowerCase() === 'crypto').map(a => {
-    const t = a.ticker.toLowerCase();
-    if (t === 'btc' || t === 'btc.crypto') return 'bitcoin';
-    if (t === 'eth') return 'ethereum';
-    if (t === 'sol') return 'solana';
-    return t;
-  }), [dbAssets]);
+  const lastUpdated = marketLastUpdated;
+  const isLoading = isPortfolioLoading;
 
-  // High-reliability Fintech Strategy: Use TanStack Query
-  const { 
-    data: marketData, 
-    isLoading: isMarketLoading, 
-    isError, 
-    refetch, 
-    isFetching,
-    dataUpdatedAt 
-  } = useMarketData(stockTickers, cryptoIds);
-
-  const isLoading = isPortfolioLoading || isMarketLoading;
 
   const formatVal = (val) => formatCurrency(val, 'USD', { privacyMode });
 
-  // Map holdings to their live (or last known) prices
+  // Map holdings to their DB-cached prices (Immediate render!)
   const processedHoldings = useMemo(() => {
     return dbAssets.map(asset => {
-      let priceData;
-      const assetType = asset.type.toLowerCase();
-      if (assetType === 'stock') {
-        // Handle hybrid tickers like BTC.CRYPTO which are redirected in service
-        priceData = marketData?.stocks?.[asset.ticker];
-      } else {
-        const id = asset.ticker.toLowerCase() === 'btc' || asset.ticker.toLowerCase() === 'btc.crypto' ? 'bitcoin' : 
-                   asset.ticker.toLowerCase() === 'eth' ? 'ethereum' : 
-                   asset.ticker.toLowerCase() === 'sol' ? 'solana' : asset.ticker.toLowerCase();
-        priceData = marketData?.cryptos?.[id];
-        // Normalize CoinGecko's nested structure if needed
-        if (priceData && !priceData.price) {
-          priceData = {
-            price: priceData.usd,
-            change: priceData.usd_24h_change
-          };
-        }
-      }
-
-      const price = priceData?.price || 0;
-      const change = priceData?.change || 0;
-      const value = price * asset.quantity;
+      const price = asset.current_price || 0;
+      const change = asset.price_change_24h || 0;
+      const value = price * (asset.quantity || 0);
 
       return { 
         ...asset, 
@@ -69,11 +33,11 @@ const MarketWatchTable = () => {
         value 
       };
     });
-  }, [dbAssets, marketData]);
+  }, [dbAssets]);
 
   const totalValue = processedHoldings.reduce((sum, h) => sum + h.value, 0);
   const cryptoVolatility = processedHoldings
-    .filter(h => h.type.toLowerCase() === 'crypto')
+    .filter(h => (h.type || '').toLowerCase() === 'crypto')
     .reduce((acc, h, _, arr) => acc + (h.change / (arr.length || 1)), 0);
   
   const isVolatile = Math.abs(cryptoVolatility) > 5;
@@ -89,27 +53,28 @@ const MarketWatchTable = () => {
               <span className="text-[10px] font-black uppercase tracking-tighter">Volatility Alert</span>
             </div>
           )}
-          {isError && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">
-              <Clock size={12} />
-              <span className="text-[10px] font-black uppercase tracking-tighter">Last Known Prices</span>
+          {isSyncing && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+              <RefreshCw size={12} className="animate-spin" />
+              <span className="text-[10px] font-black uppercase tracking-tighter">Updating Prices...</span>
             </div>
           )}
         </div>
         <button 
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="p-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-400 transition-all disabled:opacity-50"
+          onClick={() => window.location.reload()}
+          className="p-2 rounded-full hover:bg-white/5 text-slate-400 transition-all hover:text-indigo-400"
+          title="Force Sync"
         >
-          <RefreshCw size={18} className={isFetching ? 'animate-spin' : ''} />
+          <RefreshCw size={18} className={isSyncing ? 'animate-spin' : ''} />
         </button>
       </div>
 
       <div className="rounded-3xl bg-[#0f0f12] border border-white/[0.05] overflow-hidden shadow-2xl relative">
         {/* Background Syncing Indicator */}
-        {isFetching && !isLoading && (
+        {isSyncing && !isLoading && (
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-indigo-500/50 animate-pulse z-50" />
         )}
+
 
         <table className="w-full text-left border-collapse">
           <thead>
