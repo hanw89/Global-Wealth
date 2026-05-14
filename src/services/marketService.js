@@ -1,9 +1,11 @@
+import { supabase } from '../lib/supabaseClient';
+
 const MASSIVE_API_KEY = 'fV5rCiX38dgg6NvC5HSA7OT72upRLBH7';
 const BASE_URL = 'https://api.polygon.io';
 const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price';
-import { supabase } from '../lib/supabaseClient';
 
 /**
+
  * Massive Unified Market Service - ULTRA FAST VERSION
  * Optimized: Cryptos use CoinGecko (Batching), Stocks use Polygon (Throttled).
  */
