@@ -149,6 +149,62 @@ export const fetchExchangeRate = async () => {
   }
 };
 
+export const fetchHistoricalForex = async () => {
+  try {
+    await throttlePolygon();
+    const to = new Date().toISOString().split('T')[0];
+    const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const url = `${BASE_URL}/v2/aggs/ticker/C:USDKRW/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=5000`;
+    const response = await fetch(url, { headers: { 'Authorization': `Bearer ${MASSIVE_API_KEY}` } });
+    const data = await response.json();
+    return data.results?.map(r => ({
+      date: new Date(r.t).toISOString().split('T')[0],
+      close: r.c
+    })) || [];
+  } catch (error) {
+    console.error('Forex History Error:', error);
+    return [];
+  }
+};
+
+// Legacy support for single/array crypto fetch
+export const fetchCryptoPrices = async (tickers = []) => {
+  const priceMap = await fetchCryptoPricesBatch(tickers);
+  const results = {};
+  Object.keys(priceMap).forEach(ticker => {
+    results[ticker] = {
+      usd: priceMap[ticker].price,
+      usd_24h_change: priceMap[ticker].change
+    };
+    // Also support lowercase for compatibility with some older hooks
+    results[ticker.toLowerCase()] = results[ticker];
+  });
+  return results;
+};
+
+// Legacy support for array stock fetch
+export const fetchStockPrices = async (tickers = []) => {
+  const results = {};
+  for (const ticker of tickers) {
+    try {
+      await throttlePolygon();
+      const url = `${BASE_URL}/v2/aggs/ticker/${ticker.toUpperCase()}/prev?adjusted=true`;
+      const response = await fetch(url, { headers: { 'Authorization': `Bearer ${MASSIVE_API_KEY}` } });
+      const data = await response.json();
+      const result = data.results?.[0];
+      if (result) {
+        results[ticker.toUpperCase()] = {
+          price: result.c,
+          change: ((result.c - result.o) / result.o) * 100
+        };
+      }
+    } catch (error) {
+      console.error(`Stock Fetch Error (${ticker}):`, error.message);
+    }
+  }
+  return results;
+};
+
 // Legacy support for single asset update
 export const updateAssetPriceInDB = async (assetId, ticker, type) => {
   if (type === 'Crypto') {

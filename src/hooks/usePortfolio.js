@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../lib/supabaseClient';
-import { fetchCryptoPrices, fetchStockPrices } from '../services/marketService.js';
 
 /**
  * Senior Fintech Hook: usePortfolio
