@@ -34,6 +34,7 @@ const invokeMarketProxy = async (tickers) => {
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   
+  console.log('Invoking market-proxy for:', tickers);
   const response = await fetch(`${supabaseUrl}/functions/v1/market-proxy`, {
     method: 'POST',
     headers: {
@@ -45,10 +46,13 @@ const invokeMarketProxy = async (tickers) => {
   });
   
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Market Proxy Failed');
+    const errorText = await response.text();
+    console.error('Market Proxy HTTP Error:', response.status, errorText);
+    throw new Error('Market Proxy Failed');
   }
-  return await response.json();
+  const result = await response.json();
+  console.log('Market Proxy Result:', result);
+  return result;
 };
 
 /**
@@ -119,10 +123,12 @@ export const updateAssetsInDB = async (assets) => {
       const tickers = stocks.map(s => s.cleanTicker);
       const priceMap = await invokeMarketProxy(tickers);
       
+      console.log('Stock Price Map received:', priceMap);
       for (const asset of stocks) {
         const data = priceMap[asset.cleanTicker];
         if (data) {
-          await supabase
+          console.log(`Updating ${asset.cleanTicker}: ${data.price}`);
+          const { error } = await supabase
             .from('assets')
             .update({
               current_price: data.price,
@@ -130,6 +136,9 @@ export const updateAssetsInDB = async (assets) => {
               last_price_at: new Date().toISOString()
             })
             .eq('id', asset.id);
+          if (error) console.error(`DB Update Error for ${asset.cleanTicker}:`, error);
+        } else {
+          console.warn(`No data found in priceMap for ${asset.cleanTicker}`);
         }
       }
     } catch (error) {
