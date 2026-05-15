@@ -13,8 +13,8 @@ const isStockStale = (lastPriceAt) => {
   const now = new Date();
   const lastUpdate = new Date(lastPriceAt);
   
-  // Simple check for 12 hours fallback
-  if (now.getTime() - lastUpdate.getTime() > 12 * 60 * 60 * 1000) return true;
+  // 6 hours fallback
+  if (now.getTime() - lastUpdate.getTime() > 6 * 60 * 60 * 1000) return true;
 
   try {
     // Get current time in EST
@@ -45,7 +45,7 @@ const isStockStale = (lastPriceAt) => {
     if (currentEstMinutes >= closeMinutes && lastEstMinutes < closeMinutes) return true;
 
   } catch (e) {
-    // Fallback to time-based if Intl fails
+    // Fallback
     return (now.getTime() - lastUpdate.getTime()) > 6 * 60 * 60 * 1000;
   }
 
@@ -55,8 +55,6 @@ const isStockStale = (lastPriceAt) => {
 /**
  * useMarketData
  * Optimized Strategy: Refresh based on asset type schedules.
- * - Crypto/Currency: 6 hours
- * - Stocks: Market Open/Close
  */
 export const useMarketData = (assets = []) => {
   const [syncStatus, setSyncStatus] = useState('idle');
@@ -79,7 +77,6 @@ export const useMarketData = (assets = []) => {
           if (a.type === 'Stock') {
             return isStockStale(a.last_price_at);
           } else {
-            // Crypto or Currency
             const lastUpdate = a.last_price_at ? new Date(a.last_price_at).getTime() : 0;
             return (now - lastUpdate) > SIX_HOURS;
           }
@@ -93,8 +90,7 @@ export const useMarketData = (assets = []) => {
         }
 
         // Process Sync (Edge Function handles batching)
-        // We can handle larger chunks now because Edge Function is fast
-        const syncChunk = staleAssets.slice(0, 50); 
+        const syncChunk = staleAssets.slice(0, 100); 
         await updateAssetsInDB(syncChunk);
 
       } catch (error) {
@@ -108,10 +104,8 @@ export const useMarketData = (assets = []) => {
       }
     };
 
-    // Run sync cycle
     startBackgroundSync();
 
-    // Check for staleness every 10 minutes
     const interval = setInterval(() => {
       if (!isSyncingGlobally) {
         startBackgroundSync();
@@ -123,7 +117,6 @@ export const useMarketData = (assets = []) => {
       clearInterval(interval);
     };
   }, [assets.length]); 
-
 
   return {
     syncStatus,

@@ -68,11 +68,10 @@ export const fetchCryptoPricesBatch = async (tickers = []) => {
     const results = {};
     tickers.forEach(ticker => {
       const id = COINGECKO_MAP[ticker.toUpperCase()] || ticker.toLowerCase();
-      const priceData = data[id];
-      if (priceData) {
+      if (data[id]) {
         results[ticker.toUpperCase()] = {
-          price: priceData.usd,
-          change: priceData.usd_24h_change
+          price: data[id].usd,
+          change: data[id].usd_24h_change || 0
         };
       }
     });
@@ -87,33 +86,41 @@ export const fetchCryptoPricesBatch = async (tickers = []) => {
  * Update Multiple Assets in DB
  */
 export const updateAssetsInDB = async (assets) => {
+  console.log('updateAssetsInDB started with:', assets.length, 'assets');
+  
   // 1. Normalize and Group
   const normalizedAssets = assets.map(a => ({
     ...a,
-    cleanTicker: a.ticker.replace('.CRYPTO', '').toUpperCase(),
-    effectiveType: (a.type === 'Crypto' || a.ticker.includes('.CRYPTO')) ? 'Crypto' : 'Stock'
+    cleanTicker: (a.ticker || '').replace('.CRYPTO', '').trim().toUpperCase(),
+    effectiveType: (a.type === 'Crypto' || (a.ticker || '').includes('.CRYPTO')) ? 'Crypto' : 'Stock'
   }));
 
   const cryptos = normalizedAssets.filter(a => a.effectiveType === 'Crypto');
   const stocks = normalizedAssets.filter(a => a.effectiveType === 'Stock');
 
+  console.log(`Sync Groups - Cryptos: ${cryptos.length}, Stocks: ${stocks.length}`);
+
   // 2. Batch Update Cryptos
   if (cryptos.length > 0) {
-    const tickers = cryptos.map(c => c.cleanTicker);
-    const priceMap = await fetchCryptoPricesBatch(tickers);
-    
-    for (const asset of cryptos) {
-      const data = priceMap[asset.cleanTicker];
-      if (data) {
-        await supabase
-          .from('assets')
-          .update({
-            current_price: data.price,
-            price_change_24h: data.change,
-            last_price_at: new Date().toISOString()
-          })
-          .eq('id', asset.id);
+    try {
+      const tickers = cryptos.map(c => c.cleanTicker);
+      const priceMap = await fetchCryptoPricesBatch(tickers);
+      
+      for (const asset of cryptos) {
+        const data = priceMap[asset.cleanTicker];
+        if (data) {
+          await supabase
+            .from('assets')
+            .update({
+              current_price: data.price,
+              price_change_24h: data.change,
+              last_price_at: new Date().toISOString()
+            })
+            .eq('id', asset.id);
+        }
       }
+    } catch (error) {
+      console.error('Crypto Batch Update Error:', error);
     }
   }
 
@@ -123,12 +130,11 @@ export const updateAssetsInDB = async (assets) => {
       const tickers = stocks.map(s => s.cleanTicker);
       const priceMap = await invokeMarketProxy(tickers);
       
-      console.log('Stock Price Map received:', priceMap);
       for (const asset of stocks) {
         const data = priceMap[asset.cleanTicker];
         if (data) {
-          console.log(`Updating ${asset.cleanTicker}: ${data.price}`);
-          const { error } = await supabase
+          console.log(`Updating DB for ${asset.cleanTicker}: ${data.price}`);
+          await supabase
             .from('assets')
             .update({
               current_price: data.price,
@@ -136,9 +142,8 @@ export const updateAssetsInDB = async (assets) => {
               last_price_at: new Date().toISOString()
             })
             .eq('id', asset.id);
-          if (error) console.error(`DB Update Error for ${asset.cleanTicker}:`, error);
         } else {
-          console.warn(`No data found in priceMap for ${asset.cleanTicker}`);
+          console.warn(`No data for stock: ${asset.cleanTicker}`);
         }
       }
     } catch (error) {
@@ -162,11 +167,9 @@ export const fetchExchangeRate = async () => {
 };
 
 /**
- * Fetch Historical Forex (Fallback to placeholder for now, or use another free API)
+ * Fetch Historical Forex
  */
 export const fetchHistoricalForex = async () => {
-  // open.er-api.com doesn't provide history. 
-  // We'll return empty for now as requested to focus on "live" data speed.
   return [];
 };
 
@@ -192,9 +195,10 @@ export const fetchStockPrices = async (tickers = []) => {
 };
 
 export const updateAssetPriceInDB = async (assetId, ticker, type) => {
-  if (type === 'Crypto') {
-    const priceMap = await fetchCryptoPricesBatch([ticker]);
-    const data = priceMap[ticker.toUpperCase()];
+  const cleanTicker = (ticker || '').replace('.CRYPTO', '').trim().toUpperCase();
+  if (type === 'Crypto' || (ticker || '').includes('.CRYPTO')) {
+    const priceMap = await fetchCryptoPricesBatch([cleanTicker]);
+    const data = priceMap[cleanTicker];
     if (data) {
       await supabase.from('assets').update({
         current_price: data.price,
@@ -205,8 +209,8 @@ export const updateAssetPriceInDB = async (assetId, ticker, type) => {
     }
   } else {
     try {
-      const priceMap = await invokeMarketProxy([ticker]);
-      const data = priceMap[ticker.toUpperCase()];
+      const priceMap = await invokeMarketProxy([cleanTicker]);
+      const data = priceMap[cleanTicker];
       if (data) {
         await supabase.from('assets').update({
           current_price: data.price,
