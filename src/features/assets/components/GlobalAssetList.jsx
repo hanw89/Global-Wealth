@@ -150,10 +150,8 @@ const GlobalAssetList = () => {
                 <tr key={i} className="animate-pulse bg-white/[0.02] rounded-xl"><td colSpan={9} className="h-16"></td></tr>
               ))
             ) : sortedData.map((item, idx) => (
-              <tr key={idx} className="group relative transition-all hover:scale-[1.005]">
-                <td className="absolute inset-0 bg-white/[0.03] border border-white/[0.06] backdrop-blur-md rounded-2xl group-hover:bg-white/[0.05] transition-all pointer-events-none" />
-                
-                <td className="relative px-6 py-4 z-10">
+              <tr key={idx} className="group transition-all hover:scale-[1.005]">
+                <td className="px-6 py-4 bg-white/[0.03] border-y border-l border-white/[0.06] backdrop-blur-md rounded-l-2xl group-hover:bg-white/[0.05] transition-all">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-black/40 border border-white/5">
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getAssetColor(item.ticker, item.type) }} />
@@ -163,36 +161,36 @@ const GlobalAssetList = () => {
                   </div>
                 </td>
 
-                <td className="relative px-6 py-4 text-right z-10">
+                <td className="px-6 py-4 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] transition-all">
                   <span className="text-[10px] text-slate-500 font-mono">
                     {new Date(item.created_at).toLocaleDateString()}
                   </span>
                 </td>
 
-                <td className="relative px-6 py-4 text-right z-10 text-xs font-medium text-slate-300">
+                <td className="px-6 py-4 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] transition-all text-xs font-medium text-slate-300">
                   {formatVal(item.avg_buy_price)}
                 </td>
 
-                <td className="relative px-6 py-4 text-right z-10 text-xs font-bold text-white">
+                <td className="px-6 py-4 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] transition-all text-xs font-bold text-white">
                   {formatVal(item.currentPrice)}
                 </td>
 
-                <td className="relative px-6 py-4 text-right z-10">
+                <td className="px-6 py-4 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] transition-all">
                   <div className={`inline-flex items-center gap-0.5 text-[10px] font-black ${item.change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {item.change24h >= 0 ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
                     {Math.abs(item.change24h).toFixed(2)}%
                   </div>
                 </td>
 
-                <td className="relative px-6 py-4 text-right z-10 text-xs text-slate-300">
+                <td className="px-6 py-4 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] transition-all text-xs text-slate-300">
                   {item.quantity.toLocaleString()}
                 </td>
 
-                <td className="relative px-6 py-4 text-right z-10 text-xs font-bold text-white">
+                <td className="px-6 py-4 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] transition-all text-xs font-bold text-white">
                   {formatVal(item.totalValue)}
                 </td>
 
-                <td className="relative px-6 py-4 text-right z-10">
+                <td className="px-6 py-4 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] transition-all">
                   <div className={`flex flex-col items-end`}>
                     <span className={`text-xs font-bold ${item.profitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {item.profitLoss >= 0 ? '+' : ''}{formatVal(Math.abs(item.profitLoss))}
@@ -203,7 +201,7 @@ const GlobalAssetList = () => {
                   </div>
                 </td>
 
-                <td className="relative px-6 py-4 text-center z-10">
+                <td className="px-6 py-4 text-center bg-white/[0.03] border-y border-r border-white/[0.06] backdrop-blur-md rounded-r-2xl group-hover:bg-white/[0.05] transition-all">
                   <button 
                     onClick={() => {
                       if (window.confirm(`Delete this ${item.ticker} entry (${item.quantity} units)?`)) {

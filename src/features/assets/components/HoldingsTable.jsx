@@ -181,12 +181,9 @@ const HoldingsTable = () => {
             ) : sortedData.map((item, idx) => (
               <tr 
                 key={idx} 
-                className="group relative transition-all duration-300 hover:scale-[1.01]"
+                className="group transition-all duration-300 hover:scale-[1.01]"
               >
-                {/* Glassmorphism Background Layer */}
-                <td className="absolute inset-0 bg-white/[0.03] border border-white/[0.06] backdrop-blur-md rounded-2xl group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all pointer-events-none" />
-                
-                <td className="relative px-6 py-6 z-10">
+                <td className="px-6 py-6 bg-white/[0.03] border-y border-l border-white/[0.06] backdrop-blur-md rounded-l-2xl group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
                   <div className="flex items-center gap-4">
                     {/* Ticker Pill Design */}
                     <div 
@@ -202,31 +199,31 @@ const HoldingsTable = () => {
                   </div>
                 </td>
 
-                <td className="relative px-6 py-6 text-right z-10">
+                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
                   <p className={`text-sm font-bold text-white ${privacyMode ? 'blur-sm' : ''}`}>
                     {formatVal(item.currentPrice)}
                   </p>
                 </td>
 
-                <td className="relative px-6 py-6 text-right z-10">
+                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
                   <div className={`inline-flex items-center gap-1 text-xs font-black ${item.change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {item.change24h >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                     {Math.abs(item.change24h).toFixed(2)}%
                   </div>
                 </td>
 
-                <td className="relative px-6 py-6 text-right z-10">
+                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
                   <p className="text-sm font-medium text-slate-200">{item.amount.toLocaleString()}</p>
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Units held</p>
                 </td>
 
-                <td className="relative px-6 py-6 text-right z-10">
+                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
                   <p className={`text-sm font-black text-white ${privacyMode ? 'blur-md' : ''}`}>
                     {formatVal(item.totalValue)}
                   </p>
                 </td>
 
-                <td className="relative px-6 py-6 text-right z-10">
+                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-r border-white/[0.06] backdrop-blur-md rounded-r-2xl group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
                   <div className={`flex flex-col items-end`}>
                     <p className={`text-sm font-bold ${item.profitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {item.profitLoss >= 0 ? '+' : ''}{formatVal(Math.abs(item.profitLoss))}

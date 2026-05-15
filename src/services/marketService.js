@@ -83,16 +83,23 @@ export const fetchCryptoPricesBatch = async (tickers = []) => {
  * Update Multiple Assets in DB
  */
 export const updateAssetsInDB = async (assets) => {
-  const cryptos = assets.filter(a => a.type === 'Crypto');
-  const stocks = assets.filter(a => a.type === 'Stock');
+  // 1. Normalize and Group
+  const normalizedAssets = assets.map(a => ({
+    ...a,
+    cleanTicker: a.ticker.replace('.CRYPTO', '').toUpperCase(),
+    effectiveType: (a.type === 'Crypto' || a.ticker.includes('.CRYPTO')) ? 'Crypto' : 'Stock'
+  }));
 
-  // 1. Batch Update Cryptos
+  const cryptos = normalizedAssets.filter(a => a.effectiveType === 'Crypto');
+  const stocks = normalizedAssets.filter(a => a.effectiveType === 'Stock');
+
+  // 2. Batch Update Cryptos
   if (cryptos.length > 0) {
-    const tickers = cryptos.map(c => c.ticker);
+    const tickers = cryptos.map(c => c.cleanTicker);
     const priceMap = await fetchCryptoPricesBatch(tickers);
     
     for (const asset of cryptos) {
-      const data = priceMap[asset.ticker.toUpperCase()];
+      const data = priceMap[asset.cleanTicker];
       if (data) {
         await supabase
           .from('assets')
@@ -106,14 +113,14 @@ export const updateAssetsInDB = async (assets) => {
     }
   }
 
-  // 2. Batch Update Stocks (Ultra Fast via Edge Function)
+  // 3. Batch Update Stocks (Ultra Fast via Edge Function)
   if (stocks.length > 0) {
     try {
-      const tickers = stocks.map(s => s.ticker);
+      const tickers = stocks.map(s => s.cleanTicker);
       const priceMap = await invokeMarketProxy(tickers);
       
       for (const asset of stocks) {
-        const data = priceMap[asset.ticker.toUpperCase()];
+        const data = priceMap[asset.cleanTicker];
         if (data) {
           await supabase
             .from('assets')

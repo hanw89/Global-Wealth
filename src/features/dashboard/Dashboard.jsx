@@ -66,7 +66,10 @@ const Dashboard = () => {
   const estimatedCapitalGainsTax = totalNetWorth * 0.15;
 
   // Find Bitcoin in dbAssets for the top-level card
-  const bitcoinAsset = dbAssets.find(a => (a.ticker || '').toUpperCase() === 'BTC');
+  const bitcoinAsset = dbAssets.find(a => {
+    const ticker = (a.ticker || '').toUpperCase();
+    return ticker === 'BTC' || ticker === 'BTC.CRYPTO';
+  });
   const bitcoinPrice = bitcoinAsset?.current_price || 0;
   const bitcoinChange = bitcoinAsset?.price_change_24h || 0;
 
