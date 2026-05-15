@@ -90,7 +90,7 @@ const Dashboard = () => {
             {/* Forex Live Sync Status */}
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
               <Globe size={10} />
-              <span>USD/KRW: {exchangeRate.toFixed(2)}</span>
+              <span>USD/KRW: {exchangeRate?.toFixed(2) || '1,350.00'}</span>
               {rateLastUpdated ? (
                 <span className="opacity-60 font-medium">Sync: {new Date(rateLastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               ) : null}
@@ -144,7 +144,7 @@ const Dashboard = () => {
             </h2>
             <div className={`flex items-center gap-1 text-sm font-medium ${bitcoinChange >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
               {bitcoinChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-              <span>{bitcoinChange.toFixed(2)}% (24h)</span>
+              <span>{(bitcoinChange || 0).toFixed(2)}% (24h)</span>
             </div>
           </div>
 

@@ -7,7 +7,7 @@ import { useAppContext } from '../../../context/AppContext.js';
 
 const MarketWatchTable = () => {
   const { privacyMode, exchangeRate, isSyncing, marketLastUpdated } = useAppContext();
-  const { data: portfolio, isLoading: isPortfolioLoading } = usePortfolio(exchangeRate);
+  const { data: portfolio, isLoading: isPortfolioLoading, isError } = usePortfolio(exchangeRate);
   
   const dbAssets = useMemo(() => portfolio?.dbAssets || [], [portfolio]);
 
@@ -128,7 +128,7 @@ const MarketWatchTable = () => {
           </tbody>
         </table>
         
-        {dataUpdatedAt ? (
+        {marketLastUpdated ? (
           <div className="px-6 py-3 border-t border-white/[0.05] bg-white/[0.01] flex justify-between items-center">
             <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Global Portfolio Summary</span>
             <span className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5">

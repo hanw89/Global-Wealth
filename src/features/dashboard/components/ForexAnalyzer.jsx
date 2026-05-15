@@ -140,7 +140,7 @@ const ForexAnalyzer = () => {
           <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl p-6 flex flex-col justify-center space-y-4">
             <div>
               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">1-Year Average</p>
-              <p className="text-xl font-bold text-white">₩{analysis?.average.toFixed(2)}</p>
+              <p className="text-xl font-bold text-white">₩{analysis?.average?.toFixed(2) || '0.00'}</p>
             </div>
             <div className="pt-4 border-t border-white/5">
               <div className="flex items-center gap-2 text-indigo-400 mb-1">
