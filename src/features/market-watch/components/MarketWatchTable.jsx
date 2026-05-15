@@ -133,7 +133,7 @@ const MarketWatchTable = () => {
             <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Global Portfolio Summary</span>
             <span className="text-[9px] font-bold text-slate-500 uppercase flex items-center gap-1.5">
               <Clock size={10} />
-              Sync: {new Date(dataUpdatedAt).toLocaleTimeString()}
+              Sync: {new Date(marketLastUpdated).toLocaleTimeString()}
             </span>
           </div>
         ) : null}

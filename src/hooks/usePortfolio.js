@@ -42,7 +42,7 @@ export const usePortfolio = (globalExchangeRate) => {
         lastUpdated: new Date().toISOString()
       };
     },
-    refetchInterval: 21600000, // 6 hours
-    staleTime: 21500000,
+    refetchInterval: 300000, // 5 minutes
+    staleTime: 240000,
   });
 };

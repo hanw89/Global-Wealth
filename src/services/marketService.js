@@ -1,14 +1,7 @@
 import { supabase } from '../lib/supabaseClient';
 
-const MASSIVE_API_KEY = 'fV5rCiX38dgg6NvC5HSA7OT72upRLBH7';
-const BASE_URL = 'https://api.polygon.io';
 const COINGECKO_URL = 'https://api.coingecko.com/api/v3/simple/price';
-
-/**
-
- * Massive Unified Market Service - ULTRA FAST VERSION
- * Optimized: Cryptos use CoinGecko (Batching), Stocks use Polygon (Throttled).
- */
+const CURRENCY_API_URL = 'https://open.er-api.com/v6/latest/USD';
 
 // Ticker to CoinGecko ID mapping
 const COINGECKO_MAP = {
@@ -34,27 +27,32 @@ const COINGECKO_MAP = {
   'ICP': 'internet-computer'
 };
 
-// Rate Limiter for Polygon ONLY
-let lastPolygonRequestTime = 0;
-const MIN_POLYGON_INTERVAL = 12500; 
-let polygonThrottlePromise = Promise.resolve();
-
-const throttlePolygon = () => {
-  const currentPromise = polygonThrottlePromise;
-  polygonThrottlePromise = (async () => {
-    await currentPromise;
-    const now = Date.now();
-    const timeSinceLast = now - lastPolygonRequestTime;
-    if (timeSinceLast < MIN_POLYGON_INTERVAL) {
-      await new Promise(resolve => setTimeout(resolve, MIN_POLYGON_INTERVAL - timeSinceLast));
-    }
-    lastPolygonRequestTime = Date.now();
-  })();
-  return polygonThrottlePromise;
+/**
+ * Invoke Supabase Edge Function for Stock Prices (Yahoo Finance Proxy)
+ */
+const invokeMarketProxy = async (tickers) => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  
+  const response = await fetch(`${supabaseUrl}/functions/v1/market-proxy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'apikey': supabaseAnonKey
+    },
+    body: JSON.stringify({ tickers })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Market Proxy Failed');
+  }
+  return await response.json();
 };
 
 /**
- * Fetch from CoinGecko (No 12s throttle, much higher limits)
+ * Fetch from CoinGecko (Batching)
  */
 export const fetchCryptoPricesBatch = async (tickers = []) => {
   if (tickers.length === 0) return {};
@@ -85,11 +83,10 @@ export const fetchCryptoPricesBatch = async (tickers = []) => {
  * Update Multiple Assets in DB
  */
 export const updateAssetsInDB = async (assets) => {
-  // 1. Group by Type
   const cryptos = assets.filter(a => a.type === 'Crypto');
   const stocks = assets.filter(a => a.type === 'Stock');
 
-  // 2. Batch Update Cryptos (FAST)
+  // 1. Batch Update Cryptos
   if (cryptos.length > 0) {
     const tickers = cryptos.map(c => c.ticker);
     const priceMap = await fetchCryptoPricesBatch(tickers);
@@ -109,103 +106,75 @@ export const updateAssetsInDB = async (assets) => {
     }
   }
 
-  // 3. Sequential Update Stocks (POLYGON RATE LIMIT)
-  for (const asset of stocks) {
+  // 2. Batch Update Stocks (Ultra Fast via Edge Function)
+  if (stocks.length > 0) {
     try {
-      await throttlePolygon();
-      const url = `${BASE_URL}/v2/aggs/ticker/${asset.ticker.toUpperCase()}/prev?adjusted=true`;
-      const response = await fetch(url, { headers: { 'Authorization': `Bearer ${MASSIVE_API_KEY}` } });
-      const data = await response.json();
-      const result = data.results?.[0];
-
-      if (result) {
-        const price = result.c;
-        const change = ((result.c - result.o) / result.o) * 100;
-
-        await supabase
-          .from('assets')
-          .update({
-            current_price: price,
-            price_change_24h: change,
-            last_price_at: new Date().toISOString()
-          })
-          .eq('id', asset.id);
+      const tickers = stocks.map(s => s.ticker);
+      const priceMap = await invokeMarketProxy(tickers);
+      
+      for (const asset of stocks) {
+        const data = priceMap[asset.ticker.toUpperCase()];
+        if (data) {
+          await supabase
+            .from('assets')
+            .update({
+              current_price: data.price,
+              price_change_24h: data.change,
+              last_price_at: new Date().toISOString()
+            })
+            .eq('id', asset.id);
+        }
       }
     } catch (error) {
-      console.error(`Stock Update Error (${asset.ticker}):`, error.message);
+      console.error('Stock Batch Update Error:', error.message);
     }
   }
 };
 
+/**
+ * Fetch Current Exchange Rate (USD to KRW)
+ */
 export const fetchExchangeRate = async () => {
   try {
-    await throttlePolygon();
-    const data = await (await fetch(`${BASE_URL}/v2/aggs/ticker/C:USDKRW/prev?adjusted=true`, {
-      headers: { 'Authorization': `Bearer ${MASSIVE_API_KEY}` }
-    })).json();
-    return data.results?.[0]?.c || 1450;
+    const response = await fetch(CURRENCY_API_URL);
+    const data = await response.json();
+    return data.rates?.KRW || 1450;
   } catch (error) {
+    console.error('Exchange Rate Error:', error);
     return 1450;
   }
 };
 
+/**
+ * Fetch Historical Forex (Fallback to placeholder for now, or use another free API)
+ */
 export const fetchHistoricalForex = async () => {
-  try {
-    await throttlePolygon();
-    const to = new Date().toISOString().split('T')[0];
-    const from = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    const url = `${BASE_URL}/v2/aggs/ticker/C:USDKRW/range/1/day/${from}/${to}?adjusted=true&sort=asc&limit=5000`;
-    const response = await fetch(url, { headers: { 'Authorization': `Bearer ${MASSIVE_API_KEY}` } });
-    const data = await response.json();
-    return data.results?.map(r => ({
-      date: new Date(r.t).toISOString().split('T')[0],
-      close: r.c
-    })) || [];
-  } catch (error) {
-    console.error('Forex History Error:', error);
-    return [];
-  }
+  // open.er-api.com doesn't provide history. 
+  // We'll return empty for now as requested to focus on "live" data speed.
+  return [];
 };
 
-// Legacy support for single/array crypto fetch
+// Compatibility Exports
 export const fetchCryptoPrices = async (tickers = []) => {
   const priceMap = await fetchCryptoPricesBatch(tickers);
   const results = {};
   Object.keys(priceMap).forEach(ticker => {
-    results[ticker] = {
-      usd: priceMap[ticker].price,
-      usd_24h_change: priceMap[ticker].change
-    };
-    // Also support lowercase for compatibility with some older hooks
+    results[ticker] = { usd: priceMap[ticker].price, usd_24h_change: priceMap[ticker].change };
     results[ticker.toLowerCase()] = results[ticker];
   });
   return results;
 };
 
-// Legacy support for array stock fetch
 export const fetchStockPrices = async (tickers = []) => {
-  const results = {};
-  for (const ticker of tickers) {
-    try {
-      await throttlePolygon();
-      const url = `${BASE_URL}/v2/aggs/ticker/${ticker.toUpperCase()}/prev?adjusted=true`;
-      const response = await fetch(url, { headers: { 'Authorization': `Bearer ${MASSIVE_API_KEY}` } });
-      const data = await response.json();
-      const result = data.results?.[0];
-      if (result) {
-        results[ticker.toUpperCase()] = {
-          price: result.c,
-          change: ((result.c - result.o) / result.o) * 100
-        };
-      }
-    } catch (error) {
-      console.error(`Stock Fetch Error (${ticker}):`, error.message);
-    }
+  if (tickers.length === 0) return {};
+  try {
+    return await invokeMarketProxy(tickers);
+  } catch (error) {
+    console.error('Stock Price Fetch Error:', error);
+    return {};
   }
-  return results;
 };
 
-// Legacy support for single asset update
 export const updateAssetPriceInDB = async (assetId, ticker, type) => {
   if (type === 'Crypto') {
     const priceMap = await fetchCryptoPricesBatch([ticker]);
@@ -219,21 +188,19 @@ export const updateAssetPriceInDB = async (assetId, ticker, type) => {
       return data;
     }
   } else {
-    // Stock logic... (throttled)
-    await throttlePolygon();
-    const url = `${BASE_URL}/v2/aggs/ticker/${ticker.toUpperCase()}/prev?adjusted=true`;
-    const response = await fetch(url, { headers: { 'Authorization': `Bearer ${MASSIVE_API_KEY}` } });
-    const data = await response.json();
-    const result = data.results?.[0];
-    if (result) {
-      const price = result.c;
-      const change = ((result.c - result.o) / result.o) * 100;
-      await supabase.from('assets').update({
-        current_price: price,
-        price_change_24h: change,
-        last_price_at: new Date().toISOString()
-      }).eq('id', assetId);
-      return { price, change };
+    try {
+      const priceMap = await invokeMarketProxy([ticker]);
+      const data = priceMap[ticker.toUpperCase()];
+      if (data) {
+        await supabase.from('assets').update({
+          current_price: data.price,
+          price_change_24h: data.change,
+          last_price_at: new Date().toISOString()
+        }).eq('id', assetId);
+        return data;
+      }
+    } catch (error) {
+      console.error('Single Stock Update Error:', error);
     }
   }
   return null;
