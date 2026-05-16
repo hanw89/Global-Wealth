@@ -28,31 +28,45 @@ const COINGECKO_MAP = {
 };
 
 /**
- * Invoke Supabase Edge Function for Stock Prices (Yahoo Finance Proxy)
+ * Invoke Supabase Edge Function for Stock Prices (Yahoo Finance or Polygon Proxy)
  */
-const invokeMarketProxy = async (tickers) => {
+const invokeMarketProxy = async (tickers, provider = 'yahoo', apiKey = null) => {
+  if (!tickers || tickers.length === 0) return {};
+  
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
   
-  console.log('Invoking market-proxy for:', tickers);
-  const response = await fetch(`${supabaseUrl}/functions/v1/market-proxy`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${supabaseAnonKey}`,
-      'apikey': supabaseAnonKey
-    },
-    body: JSON.stringify({ tickers })
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Market Proxy HTTP Error:', response.status, errorText);
-    throw new Error('Market Proxy Failed');
+  console.log(`[MarketSync] Invoking proxy for ${tickers.length} symbols via ${provider}...`);
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/market-proxy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'apikey': supabaseAnonKey
+      },
+      body: JSON.stringify({ tickers, provider, apiKey })
+    });
+    
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error(`[MarketSync] Proxy HTTP Error (${response.status}):`, errText);
+      return {};
+    }
+    
+    const result = await response.json();
+    if (result.error) {
+      console.error('[MarketSync] Proxy logic error:', result.error);
+      return {};
+    }
+    
+    const count = Object.keys(result).length;
+    console.log(`[MarketSync] Successfully received data for ${count} / ${tickers.length} symbols`);
+    return result;
+  } catch (error) {
+    console.error('[MarketSync] Network Exception:', error);
+    return {};
   }
-  const result = await response.json();
-  console.log('Market Proxy Result:', result);
-  return result;
 };
 
 /**
@@ -86,7 +100,7 @@ export const fetchCryptoPricesBatch = async (tickers = []) => {
  * Update Multiple Assets in DB
  */
 export const updateAssetsInDB = async (assets) => {
-  console.log('updateAssetsInDB started with:', assets.length, 'assets');
+  console.log('[MarketSync] updateAssetsInDB starting for', assets.length, 'assets');
   
   // 1. Normalize and Group
   const normalizedAssets = assets.map(a => ({
@@ -98,7 +112,7 @@ export const updateAssetsInDB = async (assets) => {
   const cryptos = normalizedAssets.filter(a => a.effectiveType === 'Crypto');
   const stocks = normalizedAssets.filter(a => a.effectiveType === 'Stock');
 
-  console.log(`Sync Groups - Cryptos: ${cryptos.length}, Stocks: ${stocks.length}`);
+  console.log(`[MarketSync] Groups -> Cryptos: ${cryptos.length}, Stocks: ${stocks.length}`);
 
   // 2. Batch Update Cryptos
   if (cryptos.length > 0) {
@@ -120,7 +134,7 @@ export const updateAssetsInDB = async (assets) => {
         }
       }
     } catch (error) {
-      console.error('Crypto Batch Update Error:', error);
+      console.error('[MarketSync] Crypto Batch Error:', error);
     }
   }
 
@@ -128,26 +142,29 @@ export const updateAssetsInDB = async (assets) => {
   if (stocks.length > 0) {
     try {
       const tickers = stocks.map(s => s.cleanTicker);
-      const priceMap = await invokeMarketProxy(tickers);
+      const polygonKey = import.meta.env.VITE_POLYGON_API_KEY;
+      const provider = polygonKey ? 'polygon' : 'yahoo';
+      
+      const priceMap = await invokeMarketProxy(tickers, provider, polygonKey);
       
       for (const asset of stocks) {
         const data = priceMap[asset.cleanTicker];
-        if (data) {
-          console.log(`Updating DB for ${asset.cleanTicker}: ${data.price}`);
+        if (data && data.price > 0) {
+          console.log(`[MarketSync] Updating ${asset.cleanTicker}: ${data.price} (${provider})`);
           await supabase
             .from('assets')
             .update({
               current_price: data.price,
-              price_change_24h: data.change,
+              price_change_24h: data.change || 0,
               last_price_at: new Date().toISOString()
             })
             .eq('id', asset.id);
         } else {
-          console.warn(`No data for stock: ${asset.cleanTicker}`);
+          console.warn(`[MarketSync] No data for stock: ${asset.cleanTicker}`);
         }
       }
     } catch (error) {
-      console.error('Stock Batch Update Error:', error.message);
+      console.error('[MarketSync] Stock Batch Error:', error);
     }
   }
 };
@@ -186,16 +203,15 @@ export const fetchCryptoPrices = async (tickers = []) => {
 
 export const fetchStockPrices = async (tickers = []) => {
   if (tickers.length === 0) return {};
-  try {
-    return await invokeMarketProxy(tickers);
-  } catch (error) {
-    console.error('Stock Price Fetch Error:', error);
-    return {};
-  }
+  const polygonKey = import.meta.env.VITE_POLYGON_API_KEY;
+  const provider = polygonKey ? 'polygon' : 'yahoo';
+  return await invokeMarketProxy(tickers, provider, polygonKey);
 };
 
 export const updateAssetPriceInDB = async (assetId, ticker, type) => {
   const cleanTicker = (ticker || '').replace('.CRYPTO', '').trim().toUpperCase();
+  const polygonKey = import.meta.env.VITE_POLYGON_API_KEY;
+  
   if (type === 'Crypto' || (ticker || '').includes('.CRYPTO')) {
     const priceMap = await fetchCryptoPricesBatch([cleanTicker]);
     const data = priceMap[cleanTicker];
@@ -209,12 +225,13 @@ export const updateAssetPriceInDB = async (assetId, ticker, type) => {
     }
   } else {
     try {
-      const priceMap = await invokeMarketProxy([cleanTicker]);
+      const provider = polygonKey ? 'polygon' : 'yahoo';
+      const priceMap = await invokeMarketProxy([cleanTicker], provider, polygonKey);
       const data = priceMap[cleanTicker];
       if (data) {
         await supabase.from('assets').update({
           current_price: data.price,
-          price_change_24h: data.change,
+          price_change_24h: data.change || 0,
           last_price_at: new Date().toISOString()
         }).eq('id', assetId);
         return data;

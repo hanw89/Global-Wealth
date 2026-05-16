@@ -148,25 +148,25 @@ const HoldingsTable = () => {
       </div>
 
       <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full text-left border-separate border-spacing-y-2.5">
+        <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="text-slate-500">
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest cursor-pointer group" onClick={() => requestSort('alpha')}>
+            <tr className="text-slate-500 border-b border-white/5">
+              <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest cursor-pointer group" onClick={() => requestSort('alpha')}>
                 <div className="flex items-center gap-2">Asset <SortIcon column="alpha" sortConfig={sortConfig} /></div>
               </th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('currentPrice')}>
+              <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('currentPrice')}>
                 <div className="flex items-center justify-end gap-2">Price <SortIcon column="currentPrice" sortConfig={sortConfig} /></div>
               </th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('change24h')}>
+              <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('change24h')}>
                 <div className="flex items-center justify-end gap-2">24h Change <SortIcon column="change24h" sortConfig={sortConfig} /></div>
               </th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('amount')}>
+              <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('amount')}>
                 <div className="flex items-center justify-end gap-2">Holdings <SortIcon column="amount" sortConfig={sortConfig} /></div>
               </th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('totalValue')}>
+              <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('totalValue')}>
                 <div className="flex items-center justify-end gap-2">Total Value <SortIcon column="totalValue" sortConfig={sortConfig} /></div>
               </th>
-              <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('profitLossPercent')}>
+              <th className="px-6 py-6 text-[10px] font-black uppercase tracking-widest text-right cursor-pointer group" onClick={() => requestSort('profitLossPercent')}>
                 <div className="flex items-center justify-end gap-2">Profit/Loss <SortIcon column="profitLossPercent" sortConfig={sortConfig} /></div>
               </th>
             </tr>
@@ -174,22 +174,19 @@ const HoldingsTable = () => {
           <tbody>
             {isLoading ? (
               [...Array(5)].map((_, i) => (
-                <tr key={i} className="animate-pulse bg-white/[0.02] rounded-2xl">
-                  <td colSpan={6} className="px-6 py-8 h-20 rounded-2xl"></td>
+                <tr key={i} className="animate-pulse border-b border-white/5">
+                  <td colSpan={6} className="px-6 py-8 h-20"></td>
                 </tr>
               ))
             ) : sortedData.map((item, idx) => (
               <tr 
                 key={idx} 
-                className="group transition-all duration-300 hover:scale-[1.01]"
+                className="group transition-all duration-300 hover:bg-white/[0.02]"
               >
-                <td className="px-6 py-6 bg-white/[0.03] border-y border-l border-white/[0.06] backdrop-blur-md rounded-l-2xl group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
+                <td className="px-6 py-6 border-b border-white/[0.05] transition-all">
                   <div className="flex items-center gap-4">
-                    {/* Ticker Pill Design */}
-                    <div 
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-black/40 shadow-inner group-hover:border-white/20 transition-all"
-                    >
-                      <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ color: item.color, backgroundColor: item.color }} />
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.08] bg-black/40">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
                       <span className="text-[10px] font-black text-white uppercase tracking-tighter">{item.ticker}</span>
                     </div>
                     <div>
@@ -199,31 +196,31 @@ const HoldingsTable = () => {
                   </div>
                 </td>
 
-                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
+                <td className="px-6 py-6 text-right border-b border-white/[0.05] transition-all">
                   <p className={`text-sm font-bold text-white ${privacyMode ? 'blur-sm' : ''}`}>
                     {formatVal(item.currentPrice)}
                   </p>
                 </td>
 
-                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
+                <td className="px-6 py-6 text-right border-b border-white/[0.05] transition-all">
                   <div className={`inline-flex items-center gap-1 text-xs font-black ${item.change24h >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {item.change24h >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                     {Math.abs(item.change24h).toFixed(2)}%
                   </div>
                 </td>
 
-                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
+                <td className="px-6 py-6 text-right border-b border-white/[0.05] transition-all">
                   <p className="text-sm font-medium text-slate-200">{item.amount.toLocaleString()}</p>
                   <p className="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Units held</p>
                 </td>
 
-                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-white/[0.06] backdrop-blur-md group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
+                <td className="px-6 py-6 text-right border-b border-white/[0.05] transition-all">
                   <p className={`text-sm font-black text-white ${privacyMode ? 'blur-md' : ''}`}>
                     {formatVal(item.totalValue)}
                   </p>
                 </td>
 
-                <td className="px-6 py-6 text-right bg-white/[0.03] border-y border-r border-white/[0.06] backdrop-blur-md rounded-r-2xl group-hover:bg-white/[0.05] group-hover:border-white/10 transition-all">
+                <td className="px-6 py-6 text-right border-b border-white/[0.05] transition-all">
                   <div className={`flex flex-col items-end`}>
                     <p className={`text-sm font-bold ${item.profitLoss >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {item.profitLoss >= 0 ? '+' : ''}{formatVal(Math.abs(item.profitLoss))}
