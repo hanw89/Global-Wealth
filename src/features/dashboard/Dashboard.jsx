@@ -20,7 +20,7 @@ import CashFlowChart from './components/CashFlowChart.jsx';
 import CashFlowSummary from './components/CashFlowSummary.jsx';
 import ForexAnalyzer from './components/ForexAnalyzer.jsx';
 import AssetAllocation from './components/AssetAllocation.jsx';
-import MarketWatchTable from '../market-watch/components/MarketWatchTable.jsx';
+
 
 import HoldingsTable from '../assets/components/HoldingsTable.jsx';
 import { useAppContext } from '../../context/AppContext.js';
@@ -185,13 +185,8 @@ const Dashboard = () => {
             <HoldingsTable />
           </div>
 
-          {/* Asset Allocation & Real Estate Section */}
-          <div className="lg:col-span-7">
-             <MarketWatchTable />
-          </div>
-
-          {/* Right Column: Korean Real Estate */}
-          <div className="lg:col-span-5 space-y-4">
+          {/* Korean Real Estate Section */}
+          <div className="lg:col-span-12 space-y-4">
 
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-2">KR Real Estate</h3>
             <div className="p-6 rounded-3xl bg-gradient-to-br from-white/[0.04] to-transparent border border-white/[0.08] backdrop-blur-2xl">
