@@ -402,78 +402,126 @@ const MoneyManagement = () => {
                 .map((item) => {
                   const monthlyAmount = monthlyCategoryTotals[item.category] || 0;
                   const percentage = currentTotalUsd > 0 ? (monthlyAmount / currentTotalUsd * 100).toFixed(1) : 0;
+                  const isSelected = selectedCategory === item.category;
+                  const historyData = categoryHistory[item.category] || [];
 
                   return (
-                    <div key={item.id} className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-all shadow-inner gap-4 overflow-hidden">
+                    <div 
+                      key={item.id} 
+                      onClick={() => setSelectedCategory(isSelected && selectedCategory !== 'All' ? 'All' : item.category)}
+                      className={`group relative flex flex-col p-4 rounded-2xl border transition-all shadow-inner overflow-hidden cursor-pointer ${isSelected ? 'border-white/20 bg-white/[0.05] ring-1 ring-white/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/[0.05]'}`}
+                    >
                       {/* Background Progress Indicator */}
                       <div 
                         className={`absolute left-0 top-0 bottom-0 opacity-[0.03] transition-all duration-1000 ${item.color.replace('text', 'bg')}`}
                         style={{ width: `${percentage}%` }}
                       ></div>
 
-                      <div className="flex items-center gap-4 z-10">
-                        <div className={`p-2.5 rounded-xl bg-white/5 ${item.color} shadow-lg`}>
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-bold text-white mb-0.5">{item.category}</h4>
-                          <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${item.color}`}>
-                              {percentage}% of {activeTab}
-                            </span>
-                            {item.subCategories?.length > 0 && (
-                              <span className="text-[10px] text-slate-500 font-medium">
-                                • {item.subCategories.length} sub-categories
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 z-10">
+                        <div className="flex items-center gap-4">
+                          <div className={`p-2.5 rounded-xl bg-white/5 ${item.color} shadow-lg transition-transform group-hover:scale-110`}>
+                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-white mb-0.5">{item.category}</h4>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${item.color}`}>
+                                {percentage}% of {activeTab}
                               </span>
-                            )}
+                              {item.subCategories?.length > 0 && (
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  • {item.subCategories.length} sub-categories
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6">
+                          {editingId === item.id ? (
+                            <div className="flex items-center gap-2 min-w-[120px]" onClick={e => e.stopPropagation()}>
+                              <span className="text-lg font-black text-white">{currency === 'USD' ? '$' : '₩'}</span>
+                              <input
+                                type="number"
+                                value={currency === 'KRW' ? (monthlyAmount * exchangeRate).toFixed(0) : monthlyAmount}
+                                onChange={(e) => handleAmountChange(item.id, e.target.value)}
+                                className="text-lg font-black text-white bg-black/40 border border-white/10 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-white/20"
+                                autoFocus
+                                onBlur={handleSave}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                              />
+                            </div>
+                          ) : (
+                            <div className="text-right">
+                              <p className={`text-lg font-black text-white transition-all ${isPrivacyMode ? 'blur-sm select-none' : ''}`}>
+                                {displayFormat(monthlyAmount)}
+                              </p>
+                              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
+                                Current Usage
+                              </p>
+                            </div>
+                          )}
+
+                          <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                            <button 
+                              onClick={() => addSubCategory(item.id)}
+                              className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
+                              title="Add Sub-category"
+                            >
+                              <Plus size={14} />
+                            </button>
+                            <button 
+                              onClick={() => editingId === item.id ? handleSave() : setEditingId(item.id)}
+                              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
+                              title="Edit Amount"
+                            >
+                              <MoreHorizontal size={14} />
+                            </button>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-6 z-10">
-                        {editingId === item.id ? (
-                          <div className="flex items-center gap-2 min-w-[120px]">
-                            <span className="text-lg font-black text-white">{currency === 'USD' ? '$' : '₩'}</span>
-                            <input
-                              type="number"
-                              value={currency === 'KRW' ? (monthlyAmount * exchangeRate).toFixed(0) : monthlyAmount}
-                              onChange={(e) => handleAmountChange(item.id, e.target.value)}
-                              className="text-lg font-black text-white bg-black/40 border border-white/10 rounded px-2 py-1 w-full focus:outline-none focus:ring-1 focus:ring-white/20"
-                              autoFocus
-                              onBlur={handleSave}
-                              onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                            />
+                      {/* 12-Month History Chart (Visible when selected) */}
+                      {isSelected && (
+                        <div className="mt-6 pt-6 border-t border-white/5 w-full h-48 z-10 animate-in fade-in slide-in-from-top-4 duration-500" onClick={e => e.stopPropagation()}>
+                          <div className="flex items-center justify-between mb-4">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">12-Month Historical Breakdown</p>
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${item.color.replace('text', 'bg')}`}></div>
+                              <span className="text-[10px] font-bold text-white uppercase">{item.category}</span>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="text-right">
-                            <p className={`text-lg font-black text-white transition-all ${isPrivacyMode ? 'blur-sm select-none' : ''}`}>
-                              {displayFormat(monthlyAmount)}
-                            </p>
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">
-                              Current Usage
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => addSubCategory(item.id)}
-                            className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 transition-colors"
-                            title="Add Sub-category"
-                          >
-                            <Plus size={14} />
-                          </button>
-                          <button 
-                            onClick={() => editingId === item.id ? handleSave() : setEditingId(item.id)}
-                            className="p-2 rounded-lg bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"
-                            title="Edit Amount"
-                          >
-                            <MoreHorizontal size={14} />
-                          </button>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={historyData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                              <Tooltip 
+                                content={<CustomTooltip isPrivacyMode={isPrivacyMode} displayFormat={displayFormat} />}
+                                cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1 }}
+                              />
+                              <Line 
+                                type="monotone" 
+                                dataKey={isPrivacyMode ? "dummy" : "amount"} 
+                                stroke={getHexColor(item.color)} 
+                                strokeWidth={3} 
+                                dot={{ r: 4, fill: '#0f172a', stroke: getHexColor(item.color), strokeWidth: 2 }}
+                                activeDot={{ 
+                                  r: 6, 
+                                  fill: getHexColor(item.color), 
+                                  stroke: '#fff', 
+                                  strokeWidth: 2,
+                                  onClick: (e, payload) => {
+                                    const data = payload?.payload || payload || e?.payload;
+                                    if (data && data.month !== undefined) {
+                                      setSelectedChartPoint({ category: item.category, ...data });
+                                    }
+                                  }
+                                }}
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })}
